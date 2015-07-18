@@ -1,0 +1,190 @@
+#!/usr/bin/perl
+$my_db ="a00s_230";
+$my_user = "a00s_230";
+$my_pass = "testando";
+$my_host="127.0.0.1";
+$pdb = uc(@ARGV[0]);
+chomp $pdb;
+unless($pdb){
+    print "Use ./script.444 3NIR \n\n";
+    exit;
+}
+print "Limpando\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+UPDATE a_306280 SET i_331770=NULL WHERE i_306337="GLN" AND i_307676='$pdb';
+EOF`;
+
+print "Find one Nitrogen and label as Nt1\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM  ( SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM  ( SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid,  (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance  FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323 AND second.i_306408="O"  WHERE first.i_306337="Gln" AND first.i_306408="N" AND first.i_331770 IS NULL AND first.i_307676='$pdb' AND first.i_306401=second.i_306401) tab1 ORDER BY pdbid, sequence, amino_sequence, distance, model) tab2 GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="Nt1";
+EOF`;
+
+print "Find one Nitrogen and label as Nt2\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+UPDATE a_306280 SET i_331770="Nt2" WHERE i_331770 IS NULL AND i_306337="Gln" AND i_306408="N" AND i_307676='$pdb';
+EOF`;
+
+print "Find the closest carbon < 2 from NT1 and label as Ct1\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance
+    FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid,
+    (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance
+    FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="Nt1"
+    WHERE first.i_306337="Gln" AND first.i_306408="C"  AND first.i_331770 IS NULL AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 2) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 
+    GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="Ct1";
+EOF`;
+
+print "Find the closest carbon < 2 from NT2 and label as Ct2\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance
+    FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid,
+    (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance
+    FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="Nt2"
+    WHERE first.i_306337="Gln" AND first.i_306408="C"  AND first.i_331770 IS NULL AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 2) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 
+    GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="Ct2";
+EOF`;
+
+print "Find the closest O to Ct1 < 1.5 and label as O2\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance
+    FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid,
+    (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance
+    FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="Ct1"
+    WHERE first.i_306337="Gln" AND first.i_306408="O"  AND first.i_331770 IS NULL AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 2) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 
+    GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="O2";
+EOF`;
+
+print "Find the closest C from O2 and rename as C5\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance
+    FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid,
+    (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance
+    FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="O2"
+    WHERE first.i_306337="Gln" AND first.i_306408="C" AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 2) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 
+    GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="C5";
+EOF`;
+
+print "Find the closest N from C5 and rename as N2\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance
+    FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid,
+    (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance
+    FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="C5"
+    WHERE first.i_306337="Gln" AND first.i_306408="N" AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 2) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 
+    GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="N2";
+EOF`;
+
+print "Rename Nt1 to N1\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+UPDATE a_306280 SET i_331770="N1" WHERE i_331770 = "Nt1" AND i_306337="Gln" AND i_307676='$pdb';
+EOF`;
+
+print "Rename Nt2 to N1\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+UPDATE a_306280 SET i_331770="N1" WHERE i_331770 = "Nt2" AND i_306337="Gln" AND i_307676='$pdb';
+EOF`;
+
+print "Rename Ct1 to C1\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+UPDATE a_306280 SET i_331770="C1" WHERE i_331770 = "Ct1" AND i_306337="Gln" AND i_307676='$pdb';
+EOF`;
+
+print "Rename Ct2 to C2\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+UPDATE a_306280 SET i_331770="C1" WHERE i_331770 = "Ct2" AND i_306337="Gln" AND i_307676='$pdb';
+EOF`;
+
+print "Find the closest C from C5 and label as C4\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance
+    FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid,
+    (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance
+    FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="C5"
+    WHERE first.i_306337="Gln" AND first.i_306408="C"  AND first.i_331770 IS NULL AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 2) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 
+    GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="C4";
+EOF`;
+
+print "Find the closest C from C4 and label as C3\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance
+    FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid,
+    (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance
+    FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="C4"
+    WHERE first.i_306337="Gln" AND first.i_306408="C"  AND first.i_331770 IS NULL AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 2) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 
+    GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="C3";
+EOF`;
+
+print "Find the closest C from C1 and Label as C2\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance
+    FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid,
+    (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance
+    FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="C1"
+    WHERE first.i_306337="Gln" AND first.i_306408="C"  AND first.i_331770 IS NULL AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 2) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 
+    GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="C2";
+EOF`;
+
+print "Find the closest O from C2 and label as O1\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance
+    FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid,
+    (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance
+    FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="C2"
+    WHERE first.i_306337="Gln" AND first.i_306408="O"  AND first.i_331770 IS NULL AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 2) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 
+    GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="O1";
+EOF`;
+
+print "-H1: The closest Hydrogen to the N1 with distance < 1.5A.\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+  UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid, (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="N1" WHERE first.i_306337="Gln" AND first.i_306408="H"  AND first.i_331770 IS NULL AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 1.5) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="H1";
+EOF`;
+
+print "-H2: The closest Hydrogen to C1 with distance < 1.5A.\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+  UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid, (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="C1" WHERE first.i_306337="Gln" AND first.i_306408="H"  AND first.i_331770 IS NULL AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 1.5) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="H2";
+EOF`;
+
+print "-H3: The closest Hydrogen to C3 with distance < 1.5A.\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+  UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid, (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="C3" WHERE first.i_306337="Gln" AND first.i_306408="H"  AND first.i_331770 IS NULL AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 1.5) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="H3";
+EOF`;
+
+print "-H3: Lets repeat again to get the second Hydrogen to C3 with distance < 1.5A.\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+  UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid, (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="C3" WHERE first.i_306337="Gln" AND first.i_306408="H"  AND first.i_331770 IS NULL AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 1.5) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="H3";
+EOF`;
+
+print "-H4: We will choose the closest H3 to N1 to rename to H4.\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+  UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid, (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="N1" WHERE first.i_306337="Gln" AND first.i_306408="H" AND first.i_331770 = "H3" AND first.i_307676='$pdb' AND first.i_306401=second.i_306401) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="H4";
+EOF`;
+
+print "-H5: The closest Hydrogen to C4 with distance < 1.5A.\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+  UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid, (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="C4" WHERE first.i_306337="Gln" AND first.i_306408="H"  AND first.i_331770 IS NULL AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 1.5) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="H5";
+EOF`;
+
+print "-H5: Lets repeat again to get the second Hydrogen to C4 with distance < 1.5A.\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+  UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid, (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="C4" WHERE first.i_306337="Gln" AND first.i_306408="H"  AND first.i_331770 IS NULL AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 1.5) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="H5";
+EOF`;
+
+print "-H6: We will choose the closest H5 to N1 to rename to H6.\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+  UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid, (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="N1" WHERE first.i_306337="Gln" AND first.i_306408="H" AND first.i_331770 = "H5" AND first.i_307676='$pdb' AND first.i_306401=second.i_306401) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="H6";
+EOF`;
+
+print "-H7: The closest Hydrogen to N2 with distance < 1.5A.\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+  UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid, (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="N2" WHERE first.i_306337="Gln" AND first.i_306408="H"  AND first.i_331770 IS NULL AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 1.5) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="H7";
+EOF`;
+
+print "-H7: Lets repeat again to get the second Hydrogen to N2 with distance < 1.5A.\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+  UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid, (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="N2" WHERE first.i_306337="Gln" AND first.i_306408="H"  AND first.i_331770 IS NULL AND first.i_307676='$pdb' AND first.i_306401=second.i_306401 HAVING distance < 1.5) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="H7";
+EOF`;
+
+print "-H8: We will choose the closest H7 to N1 to rename to H6.\n";
+`mysql -h $my_host -u $my_user -p$my_pass $my_db << EOF
+  UPDATE a_306280 RIGHT JOIN (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT model, pdbid, sequence, amino_sequence, firstid, secondid, distance FROM (SELECT first.i_306401 AS model, first.i_307676 AS pdbid, first.i_306323 AS sequence, first.i_306344 AS amino_sequence, first.id AS firstid, second.id AS secondid, (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance FROM a_306280 AS first LEFT JOIN a_306280 AS second ON first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323  AND second.i_331770="N1" WHERE first.i_306337="Gln" AND first.i_306408="H" AND first.i_331770 = "H7" AND first.i_307676='$pdb' AND first.i_306401=second.i_306401) tab1 ORDER BY pdbid, sequence, amino_sequence, secondid, distance, model) tab2 GROUP BY pdbid, sequence, amino_sequence, model) tab3 ON a_306280.id=tab3.firstid SET a_306280.i_331770="H8";
+EOF`;

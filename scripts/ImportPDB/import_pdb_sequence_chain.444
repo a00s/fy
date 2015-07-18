@@ -1,0 +1,56 @@
+#!/usr/bin/perl
+use DBI;
+$my_db ="a00s_230";
+$my_user = "a00s_230";
+$my_pass = "testando";
+$my_host="127.0.0.1";
+$pdb_destino = uc(@ARGV[0]);
+chomp $pdb_destino;
+unless($pdb_destino){
+    print "Use ./importa_unico.pdb 3NIR (maiusculo)\n\n";
+    exit;
+}
+# `wget -O pdb_seqres.txt ftp://ftp.wwpdb.org/pub/pdb/derived_data/pdb_seqres.txt`;
+
+open(FILE,"< pdb_seqres.txt");
+@content = <FILE>;
+close(FILE);
+$dbh = DBI->connect("DBI:mysql:$my_db:$my_host", $my_user, $my_pass);
+
+foreach $line(@content){
+    chomp $line;
+    # print $line."\n";    
+     if($line =~ /^\>/){
+	$nome = $line;
+	$line =~ s/ .+//;
+	$line =~ s/^\>//;
+	($pdb, $chain) = split(/\_/,$line);
+	$pdb = uc($pdb);
+	$last_pdb = $pdb;
+	$last_chain = $chain;
+    } else {
+	unless($pdb eq $pdb_destino){next}
+	print "$pdb\n";
+	$query = "SELECT 1 FROM a_305359 WHERE i_305373='$pdb' AND BINARY i_305380='$chain'";
+	$sqlQuery  = $dbh->prepare($query);
+	$sqlQuery->execute;
+	$jump = 0;
+	while (@row= $sqlQuery->fetchrow_array()) {
+	    print "$pdb $chain Exists\n";
+	    $rc = $sqlQuery->finish;
+	    $jump = 1;
+	    last;
+	}
+	if($jump == 1){
+	    $rc = $sqlQuery->finish;
+	    next;
+	}
+	print "$pdb $chain\n";
+	my $sth = $dbh->prepare('INSERT INTO m_305355 SET id=NULL');
+	$sth->execute();
+	$last_id = $dbh->{'mysql_insertid'};
+	$sth = $dbh->prepare('INSERT INTO a_305359 ( id, i_305373, i_305380, i_305393) VALUES (?,?,?,?)');
+	$sth->execute($last_id, $pdb, $chain, $line);
+	$rc = $sqlQuery->finish;
+    }
+}

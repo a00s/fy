@@ -1,0 +1,23 @@
+#!/bin/bash
+./import_pdb_sequence_chain.444 1WQC
+./collect_xml_xray.444 1WQC
+./ala.444 1wqc
+./arg.444 1wqc
+./asn.444 1wqc
+./asp.444 1wqc
+./cys.444 1wqc
+./gln.444 1wqc
+./glu.444 1wqc
+./gly.444 1wqc
+./his.444 1wqc
+./ile.444 1wqc
+./leu.444 1wqc
+./lys.444 1wqc
+./met.444 1wqc
+./phe.444 1wqc
+./pro.444 1wqc
+./ser.444 1wqc
+./thr.444 1wqc
+./trp.444 1wqc
+./tyr.444 1wqc
+./val.444 1wqc
