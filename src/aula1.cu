@@ -200,6 +200,8 @@ void add_atoml(char atomo_ll);
 void connect_electron(string atomo1, string atomo2);
 void load_protein(string PDBID);
 void conecta_eletrons(string procura_amino);
+void load_protein_position(string PDBID);
+void compare_protein_build_MD(int c_distancia);
 
 // util.cu
 void distance_calibration();
@@ -366,20 +368,20 @@ void initGL() {
 	srand((unsigned) time(0));
 
 //	distance_calibration();
-//	load_protein("3HYD");
-
-	paused = true;
-
 	load_protein("1wqc");
-	for (GLint i = 0; i < atomos_quantidade; i++) {
-		velocidade_x_backup[i] = velocidade_x[i];
-		velocidade_y_backup[i] = velocidade_y[i];
-		velocidade_z_backup[i] = velocidade_z[i];
-		velocidade_x[i] = 0.0;
-		velocidade_y[i] = 0.0;
-		velocidade_z[i] = 0.0;
-		cont_loop_electron_time = 999999999;
-	}
+	load_protein_position("1wqc");
+
+	//	paused = true;
+
+	//	for (GLint i = 0; i < atomos_quantidade; i++) {
+//		velocidade_x_backup[i] = velocidade_x[i];
+//		velocidade_y_backup[i] = velocidade_y[i];
+//		velocidade_z_backup[i] = velocidade_z[i];
+//		velocidade_x[i] = 0.0;
+//		velocidade_y[i] = 0.0;
+//		velocidade_z[i] = 0.0;
+//		cont_loop_electron_time = 999999999;
+//	}
 //	load_protein("8RXN");
 	// ---------------------
 //	read_pdb_amino("TRP");
@@ -939,6 +941,10 @@ void handleKeypress(int theKey, int theAction) {
 
 			case '2':
 				ativa_desativa_tensao_hb();
+				break;
+
+			case '3':
+				compare_protein_build_MD(0);
 				break;
 
 			case '.':
@@ -1672,7 +1678,10 @@ void drawScene() {
 //			glutSolidSphere(nucleo_proximity_free[i], 4, 4);
 					glutSolidSphere(nucleo_proximity_free[i], 30, 30);
 				} else {
-					glutSolidSphere(nucleo_proximity[i] * .35, 30, 30);
+//					glutSolidSphere(nucleo_proximity[i] * .35, 30, 30);
+					glutSolidCube(nucleo_proximity[i] * .50f);
+
+
 					//			glutSolidSphere(nucleo_proximity[i], 4, 4);
 				}
 			}
