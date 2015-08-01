@@ -173,7 +173,7 @@ void distance_calibration() {
 		con = driver->connect("tcp://127.0.0.1:3306", "a00s_230", "testando");
 		con->setSchema("a00s_230");
 		printf("Calibration precision %d\n", calibration_precision);
-		printf("Aqui 0.3\n");
+//		printf("Aqui 0.3\n");
 		// ------ Dictionary -------
 		// Same = 0 / Different = 1
 		// Glu = 0
@@ -248,4 +248,60 @@ void distance_calibration() {
 	} catch (sql::SQLException &e) {
 		printf("%s", e.getErrorCode());
 	}
+}
+
+void hsvtorgb(unsigned char *r, unsigned char *g, unsigned char *b, unsigned char h, unsigned char s, unsigned char v) {
+	unsigned char region, fpart, p, q, t;
+
+	if (s == 0) {
+		/* color is grayscale */
+		*r = *g = *b = v;
+		return;
+	}
+
+	/* make hue 0-5 */
+	region = h / 43;
+	/* find remainder part, make it from 0-255 */
+	fpart = (h - (region * 43)) * 6;
+
+	/* calculate temp vars, doing integer multiplication */
+	p = (v * (255 - s)) >> 8;
+	q = (v * (255 - ((s * fpart) >> 8))) >> 8;
+	t = (v * (255 - ((s * (255 - fpart)) >> 8))) >> 8;
+
+	/* assign temp vars based on color cone region */
+	switch (region) {
+	case 0:
+		*r = v;
+		*g = t;
+		*b = p;
+		break;
+	case 1:
+		*r = q;
+		*g = v;
+		*b = p;
+		break;
+	case 2:
+		*r = p;
+		*g = v;
+		*b = t;
+		break;
+	case 3:
+		*r = p;
+		*g = q;
+		*b = v;
+		break;
+	case 4:
+		*r = t;
+		*g = p;
+		*b = v;
+		break;
+	default:
+		*r = v;
+		*g = p;
+		*b = q;
+		break;
+	}
+
+	return;
 }

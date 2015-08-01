@@ -8,8 +8,7 @@
 #include <stdlib.h>
 #include <string>
 #include <sstream>
-
-//#include <map>
+#include <map>
 //#include <unordered_map>
 
 using namespace std;
@@ -107,6 +106,7 @@ GLfloat velocidade_z[1000]; // velocidade
 
 char atomo_letra[1000]; // define que atomo que eh C H O...
 GLint atomo_letraN[1000]; // C1=0 C2=1...
+string atomo_letraL[1000]; // C1 C2...
 
 GLfloat velocidade_x_backup[1000]; // velocidade
 GLfloat velocidade_y_backup[1000]; // velocidade
@@ -158,8 +158,9 @@ bool show_base_line = false;
 bool show_base = false;
 bool rastreio = false;
 bool paused = false;
-bool show_colisao_tensao = true;
-bool show_tensao_hb = true;
+bool show_colisao_tensao = false;
+bool show_tensao_hb = false;
+bool show_comparation = true;
 
 GLint forca_externa_contador = 0;
 GLint forca_externa_contador_t = 0;
@@ -186,7 +187,7 @@ GLfloat N_electron_raio = 3.1;
 GLfloat N_massa = 14.0067;
 
 GLint contador_sleep = 0;
-
+map<int, map<string, map<string, GLfloat> > > atom_statistic;
 // --------- External functions -------------
 
 // pdb.cu
@@ -200,13 +201,15 @@ void add_atoml(char atomo_ll);
 void connect_electron(string atomo1, string atomo2);
 void load_protein(string PDBID);
 void conecta_eletrons(string procura_amino);
-void load_protein_position(string PDBID);
+GLfloat load_protein_position(string PDBID, string model, int distance);
 void compare_protein_build_MD(int c_distancia);
-
+GLfloat compare_protein_build(int c_distancia);
+void load_protein_models(string PDBID);
 // util.cu
 void distance_calibration();
 int get_amino_number(const char *amino_sigla);
 int get_atom_number(const char *atomo_letra_local);
+void hsvtorgb(unsigned char *r, unsigned char *g, unsigned char *b, unsigned char h, unsigned char s, unsigned char v);
 // -------------------------------------------
 
 // Function to convert degrees to radians
@@ -367,23 +370,34 @@ void initGL() {
 	last_y = 0 - 10.0;
 	srand((unsigned) time(0));
 
-//	distance_calibration();
+	distance_calibration();
 	load_protein("1wqc");
-	load_protein_position("1wqc");
+	load_protein_models("1wqc");
+//	compare_protein_build_MD(0);
 
-	//	paused = true;
+//	 vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+//	    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+//	    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 
-	//	for (GLint i = 0; i < atomos_quantidade; i++) {
-//		velocidade_x_backup[i] = velocidade_x[i];
-//		velocidade_y_backup[i] = velocidade_y[i];
-//		velocidade_z_backup[i] = velocidade_z[i];
-//		velocidade_x[i] = 0.0;
-//		velocidade_y[i] = 0.0;
-//		velocidade_z[i] = 0.0;
-//		cont_loop_electron_time = 999999999;
-//	}
+	//------------ teste
+//int colorA[3] = [0, 0, 255];
+//int colorB[3] = [255, 0, 0];
+
+// -----------------
+
+	paused = true;
+
+	for (GLint i = 0; i < atomos_quantidade; i++) {
+		velocidade_x_backup[i] = velocidade_x[i];
+		velocidade_y_backup[i] = velocidade_y[i];
+		velocidade_z_backup[i] = velocidade_z[i];
+		velocidade_x[i] = 0.0;
+		velocidade_y[i] = 0.0;
+		velocidade_z[i] = 0.0;
+		cont_loop_electron_time = 999999999;
+	}
 //	load_protein("8RXN");
-	// ---------------------
+// ---------------------
 //	read_pdb_amino("TRP");
 //	read_pdb_amino("LEU");
 //	read_pdb_amino("TYR");
@@ -414,7 +428,7 @@ void handleMouseMove(int mouseX, int mouseY) {
 	GLfloat vertMouseSensitivity = 10.0f;
 	GLfloat horizMouseSensitivity = 10.0f;
 
-	//cout << "Mouse cursor is at position (" << mouseX << ", " << mouseY << endl;
+//cout << "Mouse cursor is at position (" << mouseX << ", " << mouseY << endl;
 
 	int horizMovement = mouseX - midWindowX;
 	int vertMovement = mouseY - midWindowY;
@@ -422,18 +436,18 @@ void handleMouseMove(int mouseX, int mouseY) {
 	camXRot += vertMovement / vertMouseSensitivity;
 	camYRot += horizMovement / horizMouseSensitivity;
 
-	// Control looking up and down with the mouse forward/back movement
-	// Limit loking up to vertically up
+// Control looking up and down with the mouse forward/back movement
+// Limit loking up to vertically up
 	if (camXRot < -90.0f) {
 		camXRot = -90.0f;
 	}
 
-	// Limit looking down to vertically down
+// Limit looking down to vertically down
 	if (camXRot > 90.0f) {
 		camXRot = 90.0f;
 	}
 
-	// Looking left and right. Keep the angles in the range -180.0f (anticlockwise turn looking behind) to 180.0f (clockwise turn looking behind)
+// Looking left and right. Keep the angles in the range -180.0f (anticlockwise turn looking behind) to 180.0f (clockwise turn looking behind)
 	if (camYRot < -180.0f) {
 		camYRot += 360.0f;
 	}
@@ -442,7 +456,7 @@ void handleMouseMove(int mouseX, int mouseY) {
 		camYRot -= 360.0f;
 	}
 
-	// Reset the mouse position to the centre of the window each frame
+// Reset the mouse position to the centre of the window each frame
 	glfwSetMousePos(midWindowX, midWindowY);
 }
 
@@ -518,7 +532,7 @@ void calculaposicoes() {
 
 // Function to calculate which direction we need to move the camera and by what amount
 void calculateCameraMovement() {
-	// Break up our movement into components along the X, Y and Z axis
+// Break up our movement into components along the X, Y and Z axis
 	float camMovementXComponent = 0.0f;
 	float camMovementYComponent = 0.0f;
 	float camMovementZComponent = 0.0f;
@@ -565,13 +579,13 @@ void calculateCameraMovement() {
 		camMovementZComponent += movementSpeedFactor * float(sin(yRotRad));
 	}
 
-	// After combining our movements for any & all keys pressed, assign them to our camera speed along the given axis
+// After combining our movements for any & all keys pressed, assign them to our camera speed along the given axis
 	camXSpeed = camMovementXComponent;
 	camYSpeed = camMovementYComponent;
 	camZSpeed = camMovementZComponent;
 
-	// Cap the speeds to our movementSpeedFactor (otherwise going forward and strafing at an angle is twice as fast as just going forward!)
-	// X Speed cap
+// Cap the speeds to our movementSpeedFactor (otherwise going forward and strafing at an angle is twice as fast as just going forward!)
+// X Speed cap
 	if (camXSpeed > movementSpeedFactor) {
 		//cout << "high capping X speed to: " << movementSpeedFactor << endl;
 		camXSpeed = movementSpeedFactor;
@@ -581,7 +595,7 @@ void calculateCameraMovement() {
 		camXSpeed = -movementSpeedFactor;
 	}
 
-	// Y Speed cap
+// Y Speed cap
 	if (camYSpeed > movementSpeedFactor) {
 		//cout << "low capping Y speed to: " << movementSpeedFactor << endl;
 		camYSpeed = movementSpeedFactor;
@@ -591,7 +605,7 @@ void calculateCameraMovement() {
 		camYSpeed = -movementSpeedFactor;
 	}
 
-	// Z Speed cap
+// Z Speed cap
 	if (camZSpeed > movementSpeedFactor) {
 		//cout << "high capping Z speed to: " << movementSpeedFactor << endl;
 		camZSpeed = movementSpeedFactor;
@@ -607,6 +621,14 @@ void show_variables() {
 		printf("%d-%c)->%d %d %d %d\n", i, atomo_letra[i], electron_arested[i][0][0], electron_arested[i][1][0], electron_arested[i][2][0], electron_arested[i][3][0]);
 	}
 	printf("----------------------------------\n");
+}
+
+void ativa_desativa_comparation() {
+	if (show_comparation) {
+		show_comparation = false;
+	} else {
+		show_comparation = true;
+	}
 }
 
 void ativa_desativa_perimetro() {
@@ -827,8 +849,8 @@ void add_chain() {
 //	} else if (contador_sleep == 1) {
 //		read_pdb_amino("TRP");
 //	}
-	// GLN TRP
-	// ---------------------------------------------------
+// GLN TRP
+// ---------------------------------------------------
 	if (contador_sleep == 0) {
 		read_pdb_amino("ASN");
 	} else if (contador_sleep == 1) {
@@ -864,11 +886,11 @@ void add_chain() {
 //	}
 //	contador_sleep++;
 //	add_atom_teste();
-	// Unico -------------------
+// Unico -------------------
 //	add_glu(true, true);
-	// -------------------------
+// -------------------------
 
-	// sequencia que precisa
+// sequencia que precisa
 //	add_leu(false, false);
 //	add_tyr(false, false);
 //	add_ile(false, false);
@@ -876,7 +898,7 @@ void add_chain() {
 //	add_trp(false, false);
 //	add_leu(false, false);
 //	add_lys(false, false);
-	// --------------------
+// --------------------
 
 //	add_gln(false, false);
 //	add_gln(false, false);
@@ -889,12 +911,12 @@ void add_chain() {
 
 //	add_tyr(false, false);
 //	add_tyr(false, false);
-	//	add_ile(false, false);
-	//	add_gln(false, false);
+//	add_ile(false, false);
+//	add_gln(false, false);
 //	add_trp(false, false);
 //	add_trp(false, false);
-	//	add_leu(false, false);
-	//	add_lys(false, false);
+//	add_leu(false, false);
+//	add_lys(false, false);
 
 //	add_tyr(false, false);
 //	add_gln(false, false);
@@ -915,7 +937,7 @@ void add_chain() {
 }
 // Function to set flags according to which keys are pressed or released
 void handleKeypress(int theKey, int theAction) {
-	// If a key is pressed, toggle the relevant key-press flag
+// If a key is pressed, toggle the relevant key-press flag
 	if (theAction == GLFW_PRESS) {
 		if (pressionando_control) {
 			switch (theKey) {
@@ -945,6 +967,10 @@ void handleKeypress(int theKey, int theAction) {
 
 			case '3':
 				compare_protein_build_MD(0);
+				break;
+
+			case '4':
+				ativa_desativa_comparation();
 				break;
 
 			case '.':
@@ -1505,7 +1531,7 @@ void drawScene() {
 	glColor3ub(255, 255, 0);
 	glutWireCube(2.0 * caixa_tamanho);
 
-	// Aidicionando ribosome
+// Aidicionando ribosome
 	add_pdb();
 //	add_pdb_amino();
 //	glColor3ub(255, 255, 255);
@@ -1514,6 +1540,10 @@ void drawScene() {
 //	glTranslatef(0.0, 0.0, 0.0);
 
 //	printf("CA 1\n");
+	if (show_comparation) {
+		compare_protein_build_MD(1);
+	}
+
 	for (GLint i = 0; i < atomos_quantidade; i++) {
 //		printf("EEE 1: %f\n", velocidade_y[2]);
 		if (posy[i] > caixa_tamanho) {
@@ -1657,18 +1687,93 @@ void drawScene() {
 //		printf("CA 4 %d\n",i);
 
 // ===================== Nucleo ======================
-		if (atomo_letra[i] == 'C') {
-			glColor3ub(126, 152, 150);
-		} else if (atomo_letra[i] == 'H') {
-			glColor3ub(233, 233, 233);
-		} else if (atomo_letra[i] == 'O') {
-			glColor3ub(255, 0, 0);
-		} else if (atomo_letra[i] == 'N') {
-			glColor3ub(78, 179, 255);
-		} else if (atomo_letra[i] == 'S') {
-			glColor3ub(255, 128, 0);
+		if (show_comparation) {
+//			printf("Aminos %d\n",amino_sequencial[i]);
+			int temp = 0;
+//			printf("Seq %d  Label %s MD %f  MIN %f MAX %f \n",amino_sequencial[i],atomo_letraL[i].c_str(), atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MAX"]);
+			if (atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] >= atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"] && atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] <= atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MAX"]) {
+//				glColor3ub(0, 255, 0);
+//				printf("OK\n");
+
+			} else if (atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] < atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"]) {
+//				int rgbcalculo = atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"] - atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"];
+				temp = atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] - atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"];
+				temp = temp * 7;
+//				printf("Abaixo %s\n",atomo_letraL[i].c_str());
+//				printf("Abaixo %s %f\n", atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] - atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"]);
+//				glColor3ub(0, 255, rgbcalculo * 20);
+			} else if (atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] > atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MAX"]) {
+//				int rgbcalculo = atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] - atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MAX"];
+				temp = atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] - atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MAX"];
+				temp = temp * 7;
+//				printf("Acima %s\n",atomo_letraL[i].c_str());
+//				printf("Acima %s %d %f\n", atomo_letraL[i].c_str(), amino_sequencial[i], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] - atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MAX"]);
+//				if(atomo_letraL[i] == "O1"){
+//					printf("Acima %s %d %f %f %f\n", atomo_letraL[i].c_str(), amino_sequencial[i], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MAX"]);
+//				}
+//				glColor3ub(rgbcalculo * 20, 255, 0);
+			} else {
+//				printf("Sem nada\n");
+			}
+//			if (atomo_letraL[i] == "O1") {
+//				printf("Check %s %d %f %f %f\n", atomo_letraL[i].c_str(), amino_sequencial[i], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MAX"]);
+//			}
+			unsigned char r, g, b;
+			hsvtorgb(&r, &g, &b, 120 + temp, 255, 255);
+//			printf("r: %d   g: %d   b: %d  %d %d\n",r,g,b, 120+temp, temp);
+			glColor3ub(r, g, b);
+//			else {
+//				glColor3ub(126, 152, 150);
+//		const GLfloat ctemp = 10.0;
+//		glColor(ctemp);
+////		float temp = 100;
+//		float x = (float) (temp * 5000.0);
+////		float x = temp;
+//		float x2 = x * x;
+//		float x3 = x2 * x;
+//		float x4 = x3 * x;
+//		float x5 = x4 * x;
+//
+//		float R, G, B = 0.0;
+//
+//		// red
+//		if (temp <= 6600) {
+//			R = 1;
+//		} else {
+//			R = 0.0002889f * x5 - 0.01258f * x4 + 0.2148f * x3 - 1.776f * x2 + 6.907f * x - 8.723f;
+//		}
+//		// green
+//		if (temp <= 6600) {
+//			G = -4.593e-05f * x5 + 0.001424f * x4 - 0.01489f * x3 + 0.0498f * x2 + 0.1669f * x - 0.1653f;
+//		} else {
+//			G = -1.308e-07f * x5 + 1.745e-05f * x4 - 0.0009116f * x3 + 0.02348f * x2 - 0.3048f * x + 2.159f;
+//		}
+//		// blue
+//		if (temp <= 2000) {
+//			B = 0;
+//		} else if (temp < 6600) {
+//			B = 1.764e-05f * x5 + 0.0003575f * x4 - 0.01554f * x3 + 0.1549f * x2 - 0.3682f * x + 0.2386f;
+//		} else {
+//			B = 1;
+//		}
+//		glColor3ub(R,G,B);
+//		printf("RGB %f %f %f\n",R,G,B);
+//		    return Color.FromScRgb(1f, R, G, B);
+//	}
 		} else {
-			glColor3ub(200, 67, 55);
+			if (atomo_letra[i] == 'C') {
+				glColor3ub(126, 152, 150);
+			} else if (atomo_letra[i] == 'H') {
+				glColor3ub(233, 233, 233);
+			} else if (atomo_letra[i] == 'O') {
+				glColor3ub(255, 0, 0);
+			} else if (atomo_letra[i] == 'N') {
+				glColor3ub(78, 179, 255);
+			} else if (atomo_letra[i] == 'S') {
+				glColor3ub(255, 128, 0);
+			} else {
+				glColor3ub(200, 67, 55);
+			}
 		}
 
 		glTranslatef(posx[i], posy[i], posz[i]);
@@ -1680,7 +1785,6 @@ void drawScene() {
 				} else {
 //					glutSolidSphere(nucleo_proximity[i] * .35, 30, 30);
 					glutSolidCube(nucleo_proximity[i] * .50f);
-
 
 					//			glutSolidSphere(nucleo_proximity[i], 4, 4);
 				}
@@ -1743,7 +1847,7 @@ void drawScene() {
 // ============================================================
 //		printf("EEE 4: %f\n", velocidade_y[2]);
 // ===================== Esfera Electron ======================
-		// Trying to use PKa, but actualy I think I shouldnt
+// Trying to use PKa, but actualy I think I shouldnt
 		GLint electron_quantidade_pka = electron_quantidade[i];
 		if (atomo_letra[i] == 'N' && i > 3) {
 			electron_quantidade_pka = electron_quantidade[i] - 1;
@@ -2073,11 +2177,11 @@ void drawScene() {
 	}
 	if (forca_externa_contador_t > forca_externa_contador_max_t) {
 		forca_externa_contador_t = 0;
-		//		printf("Resetando\n");
+//		printf("Resetando\n");
 	}
 	if (forca_externa_contador_hb > forca_externa_contador_max_hb) {
 		forca_externa_contador_hb = 0;
-		//		printf("Resetando\n");
+//		printf("Resetando\n");
 	}
 
 // -----------------------------------------------------------
@@ -2099,7 +2203,7 @@ void drawScene() {
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
-	glColor3f(0.0, 1.0, 0.0);			// Green
+	glColor3f(0.0, 1.0, 0.0);				// Green
 	glRasterPos2i(10, 10);
 	void * font = GLUT_BITMAP_9_BY_15;
 	for (string::iterator i = fps.begin(); i != fps.end(); ++i) {
@@ -2112,7 +2216,7 @@ void drawScene() {
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 // ----- Stop Drawing Stuff! ------
-	glfwSwapBuffers();			// Swap the buffers to display the scene (so we don't have to watch it being drawn!)
+	glfwSwapBuffers();				// Swap the buffers to display the scene (so we don't have to watch it being drawn!)
 }
 
 // Called like:

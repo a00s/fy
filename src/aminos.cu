@@ -32,16 +32,25 @@ struct VectorProtein {
 };
 vector<VectorProtein> pdb_analise;
 
-struct StructAmino {
-	GLfloat x;
-	GLfloat y;
-	GLfloat z;
-};
-vector<StructAmino> AminoTemp1;
-vector<StructAmino> AminoTemp2;
+//struct StructAmino {
+//	GLfloat x;
+//	GLfloat y;
+//	GLfloat z;
+//};
+vector<VectorProtein> AminoTemp1;
+vector<VectorProtein> AminoTemp2;
 
-vector<StructAmino> AminoTemp1MD;
-vector<StructAmino> AminoTemp2MD;
+vector<VectorProtein> AminoTemp1MD;
+vector<VectorProtein> AminoTemp2MD;
+
+struct VectorDistMinMax {
+	GLint aminoseq;
+	string label;
+	GLfloat min;
+	GLfloat max;
+};
+vector<VectorDistMinMax> CalcMinMax;
+vector<VectorDistMinMax> CalcMinMaxMD;
 
 GLint cont_amin = 0;
 extern int atomos_quantidade;
@@ -65,11 +74,13 @@ extern GLfloat electron_z[1000][4];
 extern GLint amino[1000];
 extern GLint amino_sequencial[1000];
 extern GLint atomo_letraN[1000];
+extern string atomo_letraL[1000];
 extern GLint contador_amino;
 extern int get_amino_number(const char *amino_sigla);
 extern int get_atom_number(const char *atomo_letra_local);
 extern bool atomo_base[1000];
 extern GLint chain_ultimo_atomo;
+extern map<int, map<string, map<string, GLfloat> > > atom_statistic;
 map<string, int> mapa_atomo;
 map<string, int> electron_contador;
 
@@ -480,6 +491,9 @@ void read_pdb_amino(string procura_amino) {
 					amino[mapa_atomo[atomo_label]] = get_amino_number(nome_amino.c_str());
 					amino_sequencial[mapa_atomo[atomo_label]] = contador_amino;
 					atomo_letraN[mapa_atomo[atomo_label]] = get_atom_number(atomo_label.c_str());
+//					atomo_letraL[mapa_atomo[atomo_label]] = atomo_label;
+//					printf("P: %d %s\n",mapa_atomo[atomo_label], atomo_label.c_str());
+
 					if (atomo_label == "N1" || atomo_label == "C1" || atomo_label == "C2") {
 						atomo_base[mapa_atomo[atomo_label]] = true;
 					}
@@ -542,7 +556,8 @@ void load_protein(string PDBID) {
 
 //		pstmt = con->prepareStatement("SELECT i_306337 amino, i_306344 aminoseq, i_306299 x, i_306307 y, i_306315 z, i_306408 atom, i_331770 atomlabel FROM a_306280 WHERE i_307676=? AND i_306401=1 AND i_331770 IS NOT NULL HAVING aminoseq IN(1) AND atom IN ('C') ORDER BY i_306344,atomlabel DESC");
 //		pstmt = con->prepareStatement("SELECT i_306337 amino, i_306344 aminoseq, i_306299 x, i_306307 y, i_306315 z, i_306408 atom, i_331770 atomlabel FROM a_306280 WHERE i_307676=? AND i_306401=1 AND i_331770 IS NOT NULL ORDER BY i_306344,atomlabel DESC");
-		pstmt = con->prepareStatement("SELECT i_306337 amino, i_306344 aminoseq, i_306299 x, i_306307 y, i_306315 z, i_306408 atom, i_331770 atomlabel FROM a_306280 WHERE i_307676=? AND i_306401=1 AND i_331770 IS NOT NULL AND i_306344=1 ORDER BY i_306344,atomlabel DESC");
+//		pstmt = con->prepareStatement("SELECT i_306337 amino, i_306344 aminoseq, i_306299 x, i_306307 y, i_306315 z, i_306408 atom, i_331770 atomlabel FROM a_306280 WHERE i_307676=? AND i_306401=1 AND i_331770 IS NOT NULL AND i_306344 IN(1,2) ORDER BY i_306344,atomlabel DESC");
+		pstmt = con->prepareStatement("SELECT i_306337 amino, i_306344 aminoseq, i_306299 x, i_306307 y, i_306315 z, i_306408 atom, i_331770 atomlabel FROM a_306280 WHERE i_307676=? AND i_306401=1 AND i_331770 IS NOT NULL ORDER BY i_306344,atomlabel DESC");
 		pstmt->setString(1, PDBID);
 		res = pstmt->executeQuery();
 		string nome_amino;
@@ -581,6 +596,9 @@ void load_protein(string PDBID) {
 			amino[mapa_atomo[atomo_label]] = get_amino_number(nome_amino.c_str());
 			amino_sequencial[mapa_atomo[atomo_label]] = contador_amino;
 			atomo_letraN[mapa_atomo[atomo_label]] = get_atom_number(atomo_label.c_str());
+			atomo_letraL[mapa_atomo[atomo_label]] = atomo_label;
+//			printf("P: %d %s\n", mapa_atomo[atomo_label], atomo_label.c_str());
+
 			if (atomo_label == "N1" || atomo_label == "C1" || atomo_label == "C2") {
 				atomo_base[mapa_atomo[atomo_label]] = true;
 			}
@@ -596,8 +614,8 @@ void load_protein(string PDBID) {
 				chain_ultimo_atomo = mapa_atomo[atomo_label];
 			}
 		}
-//		velocidade_z[mapa_atomo["C1"]] = 0.001;
-//		velocidade_z[mapa_atomo["N1"]] = 0.003;
+		velocidade_z[mapa_atomo["C1"]] = 0.001;
+		velocidade_z[mapa_atomo["N1"]] = 0.003;
 		conecta_eletrons(nome_amino);
 		delete res;
 		delete pstmt;
@@ -609,33 +627,63 @@ void load_protein(string PDBID) {
 }
 
 GLfloat compare_protein_calculate() {
-//	printf("Comparando\n");
+//	printf("------- CPC-------------\n");
 	uint tamanho_vetor_1 = AminoTemp1.size();
 	uint tamanho_vetor_2 = AminoTemp2.size();
 	GLfloat distance_local = 0.0;
+	GLfloat distance_local2 = 0.0;
 	for (uint i = 0; i < tamanho_vetor_1; ++i) {
+		distance_local = 0.0;
 		for (uint ii = 0; ii < tamanho_vetor_2; ++ii) {
-//			printf("%f %f %f / %f %f %f\n",AminoTemp1[i].x,AminoTemp1[i].y,AminoTemp1[i].z,AminoTemp2[ii].x,AminoTemp2[ii].y,AminoTemp2[ii].z);
-//			printf("D: (%f %f %f | %f %f %f)   %f        %f\n", AminoTemp2[i].x, AminoTemp2[i].y, AminoTemp2[i].z, AminoTemp2[ii].x, AminoTemp2[ii].y, AminoTemp2[ii].z, abs(sqrt(pow((AminoTemp2[ii].x - AminoTemp1[i].x), 2.0) + pow((AminoTemp2[ii].y - AminoTemp1[i].y), 2.0) + pow((AminoTemp2[ii].z - AminoTemp1[i].z), 2.0))), distance_local);
 			distance_local += abs(sqrt(pow((AminoTemp2[ii].x - AminoTemp1[i].x), 2.0) + pow((AminoTemp2[ii].y - AminoTemp1[i].y), 2.0) + pow((AminoTemp2[ii].z - AminoTemp1[i].z), 2.0)));
 		}
+		distance_local2 += distance_local;
+//		printf("C %d %s\n", AminoTemp1[i].aminoseq, AminoTemp1[i].label.c_str());
+//		if (AminoTemp1[i].label == "O1") {
+//			printf("------->O1 seq %d \n", AminoTemp1[i].aminoseq);
+//		}
+		if (atom_statistic[AminoTemp1[i].aminoseq][AminoTemp1[i].label]["MIN"] == 0) {
+//			if (AminoTemp1[i].label == "O1") {
+//				printf("P1 %f %d %d\n",distance_local, tamanho_vetor_1, AminoTemp1[i].aminoseq);
+//			}
+			atom_statistic[AminoTemp1[i].aminoseq][AminoTemp1[i].label]["MIN"] = distance_local;
+			atom_statistic[AminoTemp1[i].aminoseq][AminoTemp1[i].label]["MAX"] = distance_local;
+		} else {
+//			if (AminoTemp1[i].label == "O1") {
+//				printf("P2 %f %d %d (%f %f)\n",distance_local, tamanho_vetor_1, AminoTemp1[i].aminoseq, atom_statistic[AminoTemp1[i].aminoseq][AminoTemp1[i].label]["MIN"],atom_statistic[AminoTemp1[i].aminoseq][AminoTemp1[i].label]["MAX"]);
+//			}
+			if (distance_local < atom_statistic[AminoTemp1[i].aminoseq][AminoTemp1[i].label]["MIN"]) {
+				atom_statistic[AminoTemp1[i].aminoseq][AminoTemp1[i].label]["MIN"] = distance_local;
+				if (AminoTemp1[i].label == "O1") {
+//					printf("P3 %f\n",distance_local);
+				}
+			}
+			if (distance_local > atom_statistic[AminoTemp1[i].aminoseq][AminoTemp1[i].label]["MAX"]) {
+				atom_statistic[AminoTemp1[i].aminoseq][AminoTemp1[i].label]["MAX"] = distance_local;
+				if (AminoTemp1[i].label == "O1") {
+//					printf("P4 %f\n",distance_local);
+				}
+			}
+		}
 	}
-//	printf("%f\n",distance_local);
-	return distance_local;
+	return distance_local2;
 }
 
 GLfloat compare_protein_calculateMD() {
 	uint tamanho_vetor_1 = AminoTemp1MD.size();
 	uint tamanho_vetor_2 = AminoTemp2MD.size();
 	GLfloat distance_local = 0.0;
+	GLfloat distance_local2 = 0.0;
 	for (uint i = 0; i < tamanho_vetor_1; ++i) {
+		distance_local = 0.0;
 		for (uint ii = 0; ii < tamanho_vetor_2; ++ii) {
-//			printf("%f %f %f / %f %f %f\n",AminoTemp1[i].x,AminoTemp1[i].y,AminoTemp1[i].z,AminoTemp2[ii].x,AminoTemp2[ii].y,AminoTemp2[ii].z);
 			distance_local += abs(sqrt(pow((AminoTemp2MD[ii].x - AminoTemp1MD[i].x), 2.0) + pow((AminoTemp2MD[ii].y - AminoTemp1MD[i].y), 2.0) + pow((AminoTemp2MD[ii].z - AminoTemp1MD[i].z), 2.0)));
 		}
+		distance_local2 += distance_local;
+//		printf("SequencialB %d %s\n",AminoTemp1MD[i].aminoseq,AminoTemp1MD[i].label.c_str());
+		atom_statistic[AminoTemp1MD[i].aminoseq][AminoTemp1MD[i].label]["MD"] = distance_local;
 	}
-//	printf("%f\n",distance_local);
-	return distance_local;
+	return distance_local2;
 }
 
 void compare_protein_build_MD(int c_distancia) {
@@ -646,10 +694,10 @@ void compare_protein_build_MD(int c_distancia) {
 	int i1c = 0;
 	int i2c = c_distancia;
 	GLfloat soma_total = 0.0;
-
+//	printf("Comparando\n");
 	for (GLint i = 0; i < atomos_quantidade; i++) {
 //		printf("3d\n");
-		if (last_seq >= 0) {
+		if (last_seq > 0) {
 			if (last_seq != amino_sequencial[i]) {
 				cont_seq++;
 				cont_vector = -1;
@@ -663,6 +711,7 @@ void compare_protein_build_MD(int c_distancia) {
 			}
 		} else {
 			last_seq = amino_sequencial[i];
+//			printf("LS %d\n", amino_sequencial[i]);
 		}
 //		printf("Last seq: %d\n", last_seq);
 		if (i1c == cont_seq) {
@@ -671,6 +720,9 @@ void compare_protein_build_MD(int c_distancia) {
 			AminoTemp1MD[cont_vector].x = posx[i];
 			AminoTemp1MD[cont_vector].y = posy[i];
 			AminoTemp1MD[cont_vector].z = posz[i];
+			AminoTemp1MD[cont_vector].aminoseq = amino_sequencial[i];
+			AminoTemp1MD[cont_vector].label = atomo_letraL[i].c_str();
+//			printf("Sequencial %d   Label %s  \n",amino_sequencial[i], atomo_letraL[i].c_str());
 		}
 		if (i2c == cont_seq) {
 			if (i2c != i1c) {
@@ -683,14 +735,14 @@ void compare_protein_build_MD(int c_distancia) {
 		}
 		last_seq = amino_sequencial[i];
 	}
-	soma_total += compare_protein_calculate();
-	printf("Total final1: %f\n", soma_total);
+	soma_total += compare_protein_calculateMD();
+//	printf("Total final1: %f\n", soma_total);
 }
 
-void compare_protein_build(int c_distancia) {
+GLfloat compare_protein_build(int c_distancia) {
 //	c_distancia++;
 	uint tamanho_vetor = pdb_analise.size();
-	printf("%d\n", tamanho_vetor);
+//	printf("Tamanho vetor %d\n", tamanho_vetor);
 	int last_seq = -1;
 	int cont_seq = 0;
 	int cont_vector = -1;
@@ -698,11 +750,13 @@ void compare_protein_build(int c_distancia) {
 	int i2c = c_distancia;
 	GLfloat soma_total = 0.0;
 	for (uint i = 0; i < tamanho_vetor; ++i) {
-		if (last_seq > 0) {
+//		printf("Aminoseq %d\n",pdb_analise[i].aminoseq);
+		if (last_seq > 1) {
 			if (last_seq != pdb_analise[i].aminoseq) {
 				cont_seq++;
 				cont_vector = -1;
 				if (cont_seq > i2c) {
+//					printf("Chama cpc 1\n");
 					soma_total += compare_protein_calculate();
 					cont_seq = 1;
 					i1c++;
@@ -715,12 +769,14 @@ void compare_protein_build(int c_distancia) {
 		}
 //		printf("ContsetA %d\n",cont_seq);
 		if (i1c == cont_seq) {
-//			printf("Aqui 1: %d\n", cont_vector);
+//			printf("Aqui 1: %d %d %s\n", cont_vector, pdb_analise[i].aminoseq - 1, pdb_analise[i].label.c_str());
 			cont_vector++;
 			AminoTemp1.resize(cont_vector + 1);
 			AminoTemp1[cont_vector].x = pdb_analise[i].x;
 			AminoTemp1[cont_vector].y = pdb_analise[i].y;
 			AminoTemp1[cont_vector].z = pdb_analise[i].z;
+			AminoTemp1[cont_vector].aminoseq = pdb_analise[i].aminoseq - 1;
+			AminoTemp1[cont_vector].label = pdb_analise[i].label;
 		}
 //		printf("ContsetB %d\n",cont_seq);
 		if (i2c == cont_seq) {
@@ -736,13 +792,65 @@ void compare_protein_build(int c_distancia) {
 //		printf("ContsetC %d\n",cont_seq);
 		last_seq = pdb_analise[i].aminoseq;
 	}
+//	printf("Chama cpc 2\n");
 	soma_total += compare_protein_calculate();
-	printf("Total final2: %f\n", soma_total);
+	return (soma_total);
+//	printf("Total final2: %f\n", soma_total);
 }
 
-void load_protein_position(string PDBID) {
-	printf("Lendo proteina para analise: %s\n", PDBID.c_str());
+GLfloat load_protein_position(string PDBID, string model, int distance) {
+//	printf("Lendo proteina para analise: %s %s\n", PDBID.c_str(), model.c_str());
 	try {
+		sql::Driver *driver2;
+		sql::Connection *con2;
+		sql::PreparedStatement *pstmt2;
+		sql::ResultSet *res2;
+		driver2 = get_driver_instance();
+		con2 = driver2->connect("tcp://127.0.0.1:3306", "a00s_230", "testando");
+		con2->setSchema("a00s_230");
+//		pstmt = con->prepareStatement("SELECT i_306344 aminoseq, i_306299 x, i_306307 y, i_306315 z, i_331770 atomlabel FROM a_306280 WHERE i_307676=? AND i_306401=1 AND i_331770 IS NOT NULL ORDER BY i_306344,atomlabel DESC");
+//		string sql_final = "SELECT i_306344 aminoseq, i_306299 x, i_306307 y, i_306315 z, i_331770 atomlabel FROM a_306280 WHERE i_307676='" + PDBID + "' AND i_306401='" + model + "' AND i_331770 IS NOT NULL AND i_306344 IN(1,2) ORDER BY i_306344,atomlabel DESC";
+		string sql_final = "SELECT i_306344 aminoseq, i_306299 x, i_306307 y, i_306315 z, i_331770 atomlabel FROM a_306280 WHERE i_307676='" + PDBID + "' AND i_306401='" + model + "' AND i_331770 IS NOT NULL ORDER BY i_306344,atomlabel DESC";
+		pstmt2 = con2->prepareStatement(sql_final);
+//		pstmt2->setString(1, PDBID);
+//		pstmt2->setInt(1, model);
+		res2 = pstmt2->executeQuery();
+		int cont_atom = -1;
+		while (res2->next()) {
+			cont_atom++;
+//			printf("x1:\n");
+//			printf("x: %f\n",res->getDouble("x"));
+			pdb_analise.resize(cont_atom + 1);
+			pdb_analise[cont_atom].aminoseq = res2->getInt("aminoseq");
+			pdb_analise[cont_atom].label = res2->getString("atomlabel").c_str();
+			pdb_analise[cont_atom].x = res2->getDouble("x");
+			pdb_analise[cont_atom].y = res2->getDouble("y");
+			pdb_analise[cont_atom].z = res2->getDouble("z");
+//			if(pdb_analise[cont_atom].label == "O1"){
+//				printf("O1: %f %f %f\n",pdb_analise[cont_atom].x,pdb_analise[cont_atom].y,pdb_analise[cont_atom].z);
+//			}
+		}
+		delete res2;
+		delete pstmt2;
+		delete con2;
+//		printf("PDBid Loaded\n");
+//		compare_protein_build_MD(0);
+		return (compare_protein_build(distance));
+	} catch (sql::SQLException &e) {
+		printf("%d\n", e.getErrorCode());
+	}
+	return 0.0;
+}
+
+void load_protein_models(string PDBID) {
+	printf("Vendo quantidade de modelos: %s\n", PDBID.c_str());
+	try {
+//		map< int, map< string, map< string, GLfloat > > > mapa_teste;
+//		mapa_teste[1]["C1"]["MIN"] = 10.1;
+//		printf("Res: %f\n",mapa_teste[1]["C1"]["MIN"]);
+
+		GLfloat calculated_pdb_min = 0;
+		GLfloat calculated_pdb_max = 0;
 		sql::Driver *driver;
 		sql::Connection *con;
 		sql::PreparedStatement *pstmt;
@@ -750,28 +858,30 @@ void load_protein_position(string PDBID) {
 		driver = get_driver_instance();
 		con = driver->connect("tcp://127.0.0.1:3306", "a00s_230", "testando");
 		con->setSchema("a00s_230");
-//		pstmt = con->prepareStatement("SELECT i_306344 aminoseq, i_306299 x, i_306307 y, i_306315 z, i_331770 atomlabel FROM a_306280 WHERE i_307676=? AND i_306401=1 AND i_331770 IS NOT NULL ORDER BY i_306344,atomlabel DESC");
-		pstmt = con->prepareStatement("SELECT i_306344 aminoseq, i_306299 x, i_306307 y, i_306315 z, i_331770 atomlabel FROM a_306280 WHERE i_307676=? AND i_306401=1 AND i_331770 IS NOT NULL AND i_306344=1 ORDER BY i_306344,atomlabel DESC");
+		pstmt = con->prepareStatement("SELECT i_306401 FROM a_306280 WHERE i_307676=? GROUP BY i_306401");
 		pstmt->setString(1, PDBID);
 		res = pstmt->executeQuery();
-		int cont_atom = -1;
+		GLfloat resultado_local = 0;
 		while (res->next()) {
-			cont_atom++;
-			pdb_analise.resize(cont_atom + 1);
-			pdb_analise[cont_atom].aminoseq = res->getInt("aminoseq");
-			pdb_analise[cont_atom].label = res->getString("atomlabel").c_str();
-			pdb_analise[cont_atom].x = res->getDouble("x");
-			pdb_analise[cont_atom].y = res->getDouble("y");
-			pdb_analise[cont_atom].z = res->getDouble("z");
+//			printf("Modelo %d\n",res->getInt(1));
+			resultado_local = load_protein_position(PDBID, res->getString(1), 1);
+			if (calculated_pdb_min == 0) {
+				calculated_pdb_min = resultado_local;
+				calculated_pdb_max = resultado_local;
+			} else {
+				if (resultado_local < calculated_pdb_min) {
+					calculated_pdb_min = resultado_local;
+				}
+				if (resultado_local > calculated_pdb_max) {
+					calculated_pdb_max = resultado_local;
+				}
+			}
 		}
 		delete res;
 		delete pstmt;
 		delete con;
-		printf("PDBid Loaded\n");
-//		compare_protein_build_MD(0);
-		compare_protein_build(0);
+		printf("MINMAX %f %f\n", calculated_pdb_min, calculated_pdb_max);
 	} catch (sql::SQLException &e) {
 		printf("%d\n", e.getErrorCode());
 	}
 }
-

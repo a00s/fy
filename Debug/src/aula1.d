@@ -180,4 +180,8 @@ src/aula1.o : ../src/aula1.cu \
     /usr/include/GL/freeglut_ext.h \
     /usr/include/c++/4.8/cstdio \
     /usr/include/c++/4.8/sstream \
-    /usr/include/c++/4.8/bits/sstream.tcc
+    /usr/include/c++/4.8/bits/sstream.tcc \
+    /usr/include/c++/4.8/map \
+    /usr/include/c++/4.8/bits/stl_tree.h \
+    /usr/include/c++/4.8/bits/stl_map.h \
+    /usr/include/c++/4.8/bits/stl_multimap.h
