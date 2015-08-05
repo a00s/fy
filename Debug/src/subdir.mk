@@ -6,18 +6,21 @@
 CU_SRCS += \
 ../src/aminos.cu \
 ../src/aula1.cu \
+../src/learn.cu \
 ../src/pdb.cu \
 ../src/util.cu 
 
 CU_DEPS += \
 ./src/aminos.d \
 ./src/aula1.d \
+./src/learn.d \
 ./src/pdb.d \
 ./src/util.d 
 
 OBJS += \
 ./src/aminos.o \
 ./src/aula1.o \
+./src/learn.o \
 ./src/pdb.o \
 ./src/util.o 
 

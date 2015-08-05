@@ -48,26 +48,34 @@ GLfloat lightPos[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 //GLfloat lightPos[] = { 0.0f, 0.0f, 300.0f, 1.0f };
 
 // How fast we move (higher values mean we move and strafe faster)
-GLfloat movementSpeedFactor = 0.2f;
+//GLfloat movementSpeedFactor = 0.2f;
+GLfloat movementSpeedFactor = 1.0f;
 int atomos_quantidade = 0;
 GLfloat caixa_tamanho = 2000;
 int cont_loop_electron = 0;
 int cont_loop_electron_time = 1;
 static unsigned int nSeed = 5323;
-GLfloat collision_proximityE = 0.4;
-GLfloat collision_angleE = 0.5;
-GLfloat collision_proximityE_HB = 1.4;
-GLfloat collision_proximityE_HB_tensao = 0.4;
-GLfloat collision_angleE_HB = 1.5;
+
+//GLfloat collision_proximityE = 0.4;
+//GLfloat collision_angleE = 0.5;
+//GLfloat collision_proximityE_HB = 1.4;
+//GLfloat collision_proximityE_HB_tensao = 0.4;
+//GLfloat collision_angleE_HB = 1.5;
 GLfloat max_distance_hydrogen_bond = 4.5;
+
+
 //GLint forca_externa_contador_max = 4;
-GLint forca_externa_contador_max = 5;
-GLint forca_externa_contador_max_t = 4;
+GLint forca_externa_contador_max = 0;
+//GLint forca_externa_contador_max_t = 10;
+GLint forca_externa_contador_max_t = 0;
 //GLint forca_externa_contador_max_t = 8;
-GLint forca_externa_contador_max_hb = 3;
+GLint forca_externa_contador_max_hb = 99999999;
 GLint calibration_precision = 10;
 GLint calibration_precision_out = 10;
 GLint calibration_minimal_distance = 4;
+GLint contador_restart = 0;
+GLint contador_restart_max_error = 600;
+GLint contador_restart_life = 0;
 
 //GLint calibration_minimal_distance = 2;
 
@@ -78,6 +86,11 @@ GLfloat last_y;
 GLfloat posx[1000];
 GLfloat posy[1000];
 GLfloat posz[1000];
+
+GLfloat posx_backup[1000];
+GLfloat posy_backup[1000];
+GLfloat posz_backup[1000];
+
 // Electron positions
 GLfloat posEx[1000][4];
 GLfloat posEy[1000][4];
@@ -103,14 +116,17 @@ GLfloat electron_arested_min_distance[1000][4]; // Primeiro eh o atomo e segundo
 GLfloat velocidade_x[1000]; // velocidade
 GLfloat velocidade_y[1000]; // velocidade
 GLfloat velocidade_z[1000]; // velocidade
+GLfloat velocidade_x_backup[1000]; // velocidade
+GLfloat velocidade_y_backup[1000]; // velocidade
+GLfloat velocidade_z_backup[1000]; // velocidade
+
+GLfloat velocidade_x_original[1000]; // velocidade
+GLfloat velocidade_y_original[1000]; // velocidade
+GLfloat velocidade_z_original[1000]; // velocidade
 
 char atomo_letra[1000]; // define que atomo que eh C H O...
 GLint atomo_letraN[1000]; // C1=0 C2=1...
 string atomo_letraL[1000]; // C1 C2...
-
-GLfloat velocidade_x_backup[1000]; // velocidade
-GLfloat velocidade_y_backup[1000]; // velocidade
-GLfloat velocidade_z_backup[1000]; // velocidade
 
 GLfloat massa[1000];
 bool atomo_base[1000];
@@ -158,7 +174,7 @@ bool show_base_line = false;
 bool show_base = false;
 bool rastreio = false;
 bool paused = false;
-bool show_colisao_tensao = false;
+bool show_colisao_tensao = true;
 bool show_tensao_hb = false;
 bool show_comparation = true;
 
@@ -166,25 +182,25 @@ GLint forca_externa_contador = 0;
 GLint forca_externa_contador_t = 0;
 GLint forca_externa_contador_hb = 0;
 
-GLfloat C_nucleo_proximity = 1.7;
-GLfloat C_nucleo_proximity_free = 1.7; // Van der waals angstron
-GLfloat C_electron_raio = 3.4;
-GLfloat C_massa = 12.0107;
-
-GLfloat H_nucleo_proximity = 1.2;
-GLfloat H_nucleo_proximity_free = 1.2; // Van der waals angstron
-GLfloat H_electron_raio = 2.4;
-GLfloat H_massa = 1.0079;
-
-GLfloat O_nucleo_proximity = 1.52;
-GLfloat O_nucleo_proximity_free = 1.52; // Van der waals angstron
-GLfloat O_electron_raio = 3.04;
-GLfloat O_massa = 15.099;
-
-GLfloat N_nucleo_proximity = 1.55;
-GLfloat N_nucleo_proximity_free = 1.55; // Van der waals angstron
-GLfloat N_electron_raio = 3.1;
-GLfloat N_massa = 14.0067;
+//GLfloat C_nucleo_proximity = 1.7;
+//GLfloat C_nucleo_proximity_free = 1.7; // Van der waals angstron
+//GLfloat C_electron_raio = 3.4;
+//GLfloat C_massa = 12.0107;
+//
+//GLfloat H_nucleo_proximity = 1.2;
+//GLfloat H_nucleo_proximity_free = 1.2; // Van der waals angstron
+//GLfloat H_electron_raio = 2.4;
+//GLfloat H_massa = 1.0079;
+//
+//GLfloat O_nucleo_proximity = 1.52;
+//GLfloat O_nucleo_proximity_free = 1.52; // Van der waals angstron
+//GLfloat O_electron_raio = 3.04;
+//GLfloat O_massa = 15.099;
+//
+//GLfloat N_nucleo_proximity = 1.55;
+//GLfloat N_nucleo_proximity_free = 1.55; // Van der waals angstron
+//GLfloat N_electron_raio = 3.1;
+//GLfloat N_massa = 14.0067;
 
 GLint contador_sleep = 0;
 map<int, map<string, map<string, GLfloat> > > atom_statistic;
@@ -205,11 +221,15 @@ GLfloat load_protein_position(string PDBID, string model, int distance);
 void compare_protein_build_MD(int c_distancia);
 GLfloat compare_protein_build(int c_distancia);
 void load_protein_models(string PDBID);
+
 // util.cu
 void distance_calibration();
 int get_amino_number(const char *amino_sigla);
 int get_atom_number(const char *atomo_letra_local);
 void hsvtorgb(unsigned char *r, unsigned char *g, unsigned char *b, unsigned char h, unsigned char s, unsigned char v);
+
+//learn.cu
+void change_properties();
 // -------------------------------------------
 
 // Function to convert degrees to radians
@@ -273,6 +293,26 @@ void checkGLError(const char * errorLocation) {
 	} // End of if error detected
 
 } // End of chechGLError function
+
+void add_energy() {
+	for (GLint i = 0; i < atomos_quantidade; i++) {
+		if (velocidade_x[i] > 0) {
+			velocidade_x[i] += 0.01;
+		} else {
+			velocidade_x[i] -= 0.01;
+		}
+		if (velocidade_y[i] > 0) {
+			velocidade_y[i] += 0.01;
+		} else {
+			velocidade_y[i] -= 0.01;
+		}
+		if (velocidade_z[i] > 0) {
+			velocidade_z[i] += 0.01;
+		} else {
+			velocidade_z[i] -= 0.01;
+		}
+	}
+}
 
 void initGL() {
 	// ----- GLFW Settings -----
@@ -373,6 +413,15 @@ void initGL() {
 	distance_calibration();
 	load_protein("1wqc");
 	load_protein_models("1wqc");
+
+//	posx_backup = posx;
+	memcpy(posx_backup, posx, sizeof(posx));
+	memcpy(posy_backup, posy, sizeof(posx));
+	memcpy(posz_backup, posz, sizeof(posx));
+	memcpy(velocidade_x_original, velocidade_x, sizeof(velocidade_x));
+	memcpy(velocidade_y_original, velocidade_y, sizeof(velocidade_y));
+	memcpy(velocidade_z_original, velocidade_z, sizeof(velocidade_z));
+//	add_energy();
 //	compare_protein_build_MD(0);
 
 //	 vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -385,17 +434,17 @@ void initGL() {
 
 // -----------------
 
-	paused = true;
-
-	for (GLint i = 0; i < atomos_quantidade; i++) {
-		velocidade_x_backup[i] = velocidade_x[i];
-		velocidade_y_backup[i] = velocidade_y[i];
-		velocidade_z_backup[i] = velocidade_z[i];
-		velocidade_x[i] = 0.0;
-		velocidade_y[i] = 0.0;
-		velocidade_z[i] = 0.0;
-		cont_loop_electron_time = 999999999;
-	}
+//	paused = true;
+//
+//	for (GLint i = 0; i < atomos_quantidade; i++) {
+//		velocidade_x_backup[i] = velocidade_x[i];
+//		velocidade_y_backup[i] = velocidade_y[i];
+//		velocidade_z_backup[i] = velocidade_z[i];
+//		velocidade_x[i] = 0.0;
+//		velocidade_y[i] = 0.0;
+//		velocidade_z[i] = 0.0;
+//		cont_loop_electron_time = 999999999;
+//	}
 //	load_protein("8RXN");
 // ---------------------
 //	read_pdb_amino("TRP");
@@ -458,6 +507,16 @@ void handleMouseMove(int mouseX, int mouseY) {
 
 // Reset the mouse position to the centre of the window each frame
 	glfwSetMousePos(midWindowX, midWindowY);
+}
+
+void restaura_posicoes() {
+	printf("Restaurando posicoes\n");
+	memcpy(posx, posx_backup, sizeof(posx));
+	memcpy(posy, posy_backup, sizeof(posx));
+	memcpy(posz, posz_backup, sizeof(posx));
+	memcpy(velocidade_x, velocidade_x_original, sizeof(velocidade_x));
+	memcpy(velocidade_y, velocidade_y_original, sizeof(velocidade_y));
+	memcpy(velocidade_z, velocidade_z_original, sizeof(velocidade_z));
 }
 
 void pause_local() {
@@ -695,26 +754,6 @@ void camera_position(GLfloat px, GLfloat py, GLfloat pz, GLfloat rx, GLfloat ry,
 	camXPos = px;
 	camYPos = py;
 	camZPos = pz + 10;
-}
-
-void add_energy() {
-	for (GLint i = 0; i < atomos_quantidade; i++) {
-		if (velocidade_x[i] > 0) {
-			velocidade_x[i] += 0.01;
-		} else {
-			velocidade_x[i] -= 0.01;
-		}
-		if (velocidade_y[i] > 0) {
-			velocidade_y[i] += 0.01;
-		} else {
-			velocidade_y[i] -= 0.01;
-		}
-		if (velocidade_z[i] > 0) {
-			velocidade_z[i] += 0.01;
-		} else {
-			velocidade_z[i] -= 0.01;
-		}
-	}
 }
 
 void rem_energy() {
@@ -973,6 +1012,10 @@ void handleKeypress(int theKey, int theAction) {
 				ativa_desativa_comparation();
 				break;
 
+			case '5':
+				restaura_posicoes();
+				break;
+
 			case '.':
 				calibration_precision++;
 				distance_calibration();
@@ -1219,14 +1262,14 @@ GLfloat show_distance(GLfloat x1, GLfloat x2, GLfloat y1, GLfloat y2, GLfloat z1
 	return abs(sqrt(pow((x2 - x1), 2.0) + pow((y2 - y1), 2.0) + pow((z2 - z1), 2.0)));
 }
 
-bool angle_colision(GLint atomo1, GLint atomo2) {
-	GLfloat d_atomo_atomo = show_distance(posx[atomo1], posx[atomo2], posy[atomo1], posy[atomo2], posz[atomo1], posz[atomo2]);
-	GLfloat atomo_electron = electron_raio[atomo1] + electron_raio[atomo2];
-	if (abs(d_atomo_atomo - atomo_electron) < collision_angleE) {
-		return true;
-	}
-	return false;
-}
+//bool angle_colision(GLint atomo1, GLint atomo2) {
+//	GLfloat d_atomo_atomo = show_distance(posx[atomo1], posx[atomo2], posy[atomo1], posy[atomo2], posz[atomo1], posz[atomo2]);
+//	GLfloat atomo_electron = electron_raio[atomo1] + electron_raio[atomo2];
+//	if (abs(d_atomo_atomo - atomo_electron) < collision_angleE) {
+//		return true;
+//	}
+//	return false;
+//}
 
 bool checa_between(GLfloat numero, GLfloat comeco, GLfloat fim, GLfloat tensao) {
 	return false;
@@ -1540,10 +1583,18 @@ void drawScene() {
 //	glTranslatef(0.0, 0.0, 0.0);
 
 //	printf("CA 1\n");
+	if(contador_restart > contador_restart_max_error){
+		printf("Ultrapassou limite de erro %d\n",contador_restart);
+		restaura_posicoes();
+		change_properties();
+		contador_restart_life = 0;
+	}
+	contador_restart_life++;
+
 	if (show_comparation) {
 		compare_protein_build_MD(1);
 	}
-
+	contador_restart = 0;
 	for (GLint i = 0; i < atomos_quantidade; i++) {
 //		printf("EEE 1: %f\n", velocidade_y[2]);
 		if (posy[i] > caixa_tamanho) {
@@ -1696,70 +1747,18 @@ void drawScene() {
 //				printf("OK\n");
 
 			} else if (atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] < atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"]) {
-//				int rgbcalculo = atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"] - atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"];
 				temp = atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] - atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"];
+				contador_restart += (temp * -1);
 				temp = temp * 7;
-//				printf("Abaixo %s\n",atomo_letraL[i].c_str());
-//				printf("Abaixo %s %f\n", atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] - atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"]);
-//				glColor3ub(0, 255, rgbcalculo * 20);
+				contador_restart++;
 			} else if (atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] > atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MAX"]) {
-//				int rgbcalculo = atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] - atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MAX"];
 				temp = atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] - atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MAX"];
+				contador_restart += temp;
 				temp = temp * 7;
-//				printf("Acima %s\n",atomo_letraL[i].c_str());
-//				printf("Acima %s %d %f\n", atomo_letraL[i].c_str(), amino_sequencial[i], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] - atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MAX"]);
-//				if(atomo_letraL[i] == "O1"){
-//					printf("Acima %s %d %f %f %f\n", atomo_letraL[i].c_str(), amino_sequencial[i], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MAX"]);
-//				}
-//				glColor3ub(rgbcalculo * 20, 255, 0);
-			} else {
-//				printf("Sem nada\n");
 			}
-//			if (atomo_letraL[i] == "O1") {
-//				printf("Check %s %d %f %f %f\n", atomo_letraL[i].c_str(), amino_sequencial[i], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MAX"]);
-//			}
 			unsigned char r, g, b;
 			hsvtorgb(&r, &g, &b, 120 + temp, 255, 255);
-//			printf("r: %d   g: %d   b: %d  %d %d\n",r,g,b, 120+temp, temp);
 			glColor3ub(r, g, b);
-//			else {
-//				glColor3ub(126, 152, 150);
-//		const GLfloat ctemp = 10.0;
-//		glColor(ctemp);
-////		float temp = 100;
-//		float x = (float) (temp * 5000.0);
-////		float x = temp;
-//		float x2 = x * x;
-//		float x3 = x2 * x;
-//		float x4 = x3 * x;
-//		float x5 = x4 * x;
-//
-//		float R, G, B = 0.0;
-//
-//		// red
-//		if (temp <= 6600) {
-//			R = 1;
-//		} else {
-//			R = 0.0002889f * x5 - 0.01258f * x4 + 0.2148f * x3 - 1.776f * x2 + 6.907f * x - 8.723f;
-//		}
-//		// green
-//		if (temp <= 6600) {
-//			G = -4.593e-05f * x5 + 0.001424f * x4 - 0.01489f * x3 + 0.0498f * x2 + 0.1669f * x - 0.1653f;
-//		} else {
-//			G = -1.308e-07f * x5 + 1.745e-05f * x4 - 0.0009116f * x3 + 0.02348f * x2 - 0.3048f * x + 2.159f;
-//		}
-//		// blue
-//		if (temp <= 2000) {
-//			B = 0;
-//		} else if (temp < 6600) {
-//			B = 1.764e-05f * x5 + 0.0003575f * x4 - 0.01554f * x3 + 0.1549f * x2 - 0.3682f * x + 0.2386f;
-//		} else {
-//			B = 1;
-//		}
-//		glColor3ub(R,G,B);
-//		printf("RGB %f %f %f\n",R,G,B);
-//		    return Color.FromScRgb(1f, R, G, B);
-//	}
 		} else {
 			if (atomo_letra[i] == 'C') {
 				glColor3ub(126, 152, 150);

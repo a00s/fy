@@ -515,12 +515,12 @@ void read_pdb_amino(string procura_amino) {
 
 			}
 		}
-//		velocidade_z[mapa_atomo["C1"]] = 0.14;
-//		velocidade_z[mapa_atomo["N1"]] = 0.13;
+//		velocidade_z[mapa_atomo["C1"]] = 5.14;
+//		velocidade_z[mapa_atomo["N1"]] = 5.13;
 //		velocidade_z[mapa_atomo["C1"]] = 0.04;
-//		velocidade_z[mapa_atomo["N1"]] = 0.03;
-		velocidade_z[mapa_atomo["C1"]] = 0.001;
-		velocidade_z[mapa_atomo["N1"]] = 0.003;
+//		velocidade_x[mapa_atomo["N1"]] = 0.03;
+//		velocidade_z[mapa_atomo["C1"]] = 0.001;
+//		velocidade_z[mapa_atomo["N1"]] = 0.003;
 		conecta_eletrons(procura_amino);
 
 		myfile.close();
@@ -553,6 +553,8 @@ void load_protein(string PDBID) {
 		driver = get_driver_instance();
 		con = driver->connect("tcp://127.0.0.1:3306", "a00s_230", "testando");
 		con->setSchema("a00s_230");
+		// Limpando
+		contador_amino = 0;
 
 //		pstmt = con->prepareStatement("SELECT i_306337 amino, i_306344 aminoseq, i_306299 x, i_306307 y, i_306315 z, i_306408 atom, i_331770 atomlabel FROM a_306280 WHERE i_307676=? AND i_306401=1 AND i_331770 IS NOT NULL HAVING aminoseq IN(1) AND atom IN ('C') ORDER BY i_306344,atomlabel DESC");
 //		pstmt = con->prepareStatement("SELECT i_306337 amino, i_306344 aminoseq, i_306299 x, i_306307 y, i_306315 z, i_306408 atom, i_331770 atomlabel FROM a_306280 WHERE i_307676=? AND i_306401=1 AND i_331770 IS NOT NULL ORDER BY i_306344,atomlabel DESC");
@@ -601,6 +603,8 @@ void load_protein(string PDBID) {
 
 			if (atomo_label == "N1" || atomo_label == "C1" || atomo_label == "C2") {
 				atomo_base[mapa_atomo[atomo_label]] = true;
+				velocidade_z[mapa_atomo["C1"]] = 0.02;
+				velocidade_x[mapa_atomo["N1"]] = 0.06;
 			}
 			if (atomo_label == "N1" && contador_amino > 0) {
 //				printf("Interligando com o ultimo atomo %d\n",chain_ultimo_atomo);
@@ -614,8 +618,8 @@ void load_protein(string PDBID) {
 				chain_ultimo_atomo = mapa_atomo[atomo_label];
 			}
 		}
-		velocidade_z[mapa_atomo["C1"]] = 0.001;
-		velocidade_z[mapa_atomo["N1"]] = 0.003;
+//		velocidade_z[mapa_atomo["C1"]] = 0.01;
+//		velocidade_x[mapa_atomo["N1"]] = 0.03;
 		conecta_eletrons(nome_amino);
 		delete res;
 		delete pstmt;
