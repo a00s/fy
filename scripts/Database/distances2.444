@@ -1,0 +1,103 @@
+#!/usr/bin/perl
+use DBI;
+$my_db ="a00s_230";
+$my_user = "a00s_230";
+$my_pass = "testando";
+$my_host="127.0.0.1";
+
+$dbh = DBI->connect("DBI:mysql:$my_db:$my_host", $my_user, $my_pass, {AutoCommit => 0});
+$query = "SELECT i_307676, i_306401 FROM a_306280 LEFT JOIN a_304461 ON i_304516=i_307676 WHERE i_304874 BETWEEN 0.01 AND 1 GROUP BY i_307676, i_306401 ORDER BY i_307676";
+$sqlQuery  = $dbh->prepare($query);
+$sqlQuery->execute;
+while (@row= $sqlQuery->fetchrow_array()) {
+    print "\n@row[0] @row[1] \n";
+    $query2 = "SELECT id, i_306299, i_306307, i_306315, i_306408, i_306344 /*Amino ID*/ FROM a_306280 WHERE i_307676='@row[0]' AND i_306401='@row[1]' AND i_306393=1";
+    $sqlQuery2  = $dbh->prepare($query2);
+    $sqlQuery2->execute;
+    while (@row2 = $sqlQuery2->fetchrow_array()) {
+	print ".";
+	# print "@row2[0] @row2[1] @row2[2] @row2[3] @row2[4]\n";
+	$sqlQuery3 = $dbh->prepare($query2);
+	$sqlQuery3 -> execute;
+	%minimal = ();	
+	my %minimal = ();
+	my %minimal_id = ();
+	while (@row3 = $sqlQuery3->fetchrow_array()) {
+	    if(@row2[0] == @row3[0]){next}
+	    if(@row2[5] == @row3[5]){next}
+	    
+	    # print "------------------->@row3[0] @row3[1] @row3[2] @row3[3] @row3[4]\n";
+	    $distance = sqrt((@row2[1]-@row3[1])**2+(@row2[2]-@row3[2])**2+(@row2[3]-@row3[3])**2);
+	    # print "$distance\n";
+            if(!$minimal{@row3[4]} || $distance < $minimal{@row3[4]}){
+		$minimal{@row3[4]} = $distance;
+		$minimal_id{@row3[4]} = @row3[0];		
+	    }
+	}
+	$final_set = "";
+	while ( my ($key, $value) = each(%minimal) ) {
+	    # print "$key => $value / ".$minimal_id{$key}."\n";
+	    if($key eq "AG"){
+		$final_set .= ", i_326240='$value', i_328294='".$minimal_id{$key}."'";
+	    } elsif($key eq "B"){
+		$final_set .= ", i_326247='$value', i_328301='".$minimal_id{$key}."'";		
+	    } elsif($key eq "Br"){
+		$final_set .= ", i_326254='$value', i_328308='".$minimal_id{$key}."'";		
+	    } elsif($key eq "C"){
+		$final_set .= ", i_326261='$value', i_328315='".$minimal_id{$key}."'";		
+	    } elsif($key eq "Ca"){
+		$final_set .= ", i_326268='$value', i_328322='".$minimal_id{$key}."'";
+	    } elsif($key eq "Cd"){
+		$final_set .= ", i_326275='$value', i_328329='".$minimal_id{$key}."'";
+	    } elsif($key eq "Cl"){
+		$final_set .= ", i_326282='$value', i_328336='".$minimal_id{$key}."'";
+	    } elsif($key eq "Co"){
+		$final_set .= ", i_326289='$value', i_328343='".$minimal_id{$key}."'";
+	    } elsif($key eq "Cu"){
+		$final_set .= ", i_326296='$value', i_328350='".$minimal_id{$key}."'";
+	    } elsif($key eq "D"){
+		$final_set .= ", i_326303='$value', i_328357='".$minimal_id{$key}."'";
+	    } elsif($key eq "F"){
+		$final_set .= ", i_326310='$value', i_328364='".$minimal_id{$key}."'";
+	    } elsif($key eq "Fe"){
+		$final_set .= ", i_326317='$value', i_328371='".$minimal_id{$key}."'";
+	    } elsif($key eq "H"){
+		$final_set .= ", i_326324='$value', i_328378='".$minimal_id{$key}."'";
+	    } elsif($key eq "Hg"){
+		$final_set .= ", i_326331='$value', i_328385='".$minimal_id{$key}."'";
+	    } elsif($key eq "Li"){
+		$final_set .= ", i_326338='$value', i_328392='".$minimal_id{$key}."'";
+	    } elsif($key eq "Mg"){
+		$final_set .= ", i_326345='$value', i_328399='".$minimal_id{$key}."'";
+	    } elsif($key eq "Mn"){
+		$final_set .= ", i_326352='$value', i_328406='".$minimal_id{$key}."'";
+	    } elsif($key eq "N"){
+		$final_set .= ", i_326359='$value', i_328413='".$minimal_id{$key}."'";
+	    } elsif($key eq "Na"){
+		$final_set .= ", i_326366='$value', i_328420='".$minimal_id{$key}."'";
+	    } elsif($key eq "Ni"){
+		$final_set .= ", i_326373='$value', i_328427='".$minimal_id{$key}."'";
+	    } elsif($key eq "O"){
+		$final_set .= ", i_326380='$value', i_328434='".$minimal_id{$key}."'";
+	    } elsif($key eq "P"){
+		$final_set .= ", i_326387='$value', i_328441='".$minimal_id{$key}."'";
+	    } elsif($key eq "S"){
+		$final_set .= ", i_326394='$value', i_328448='".$minimal_id{$key}."'";
+	    } elsif($key eq "Se"){
+		$final_set .= ", i_326401='$value', i_328455='".$minimal_id{$key}."'";
+	    } elsif($key eq "V"){
+		$final_set .= ", i_326408='$value', i_328462='".$minimal_id{$key}."'";
+	    } elsif($key eq "Zn"){
+		$final_set .= ", i_326415='$value', i_328469='".$minimal_id{$key}."'";
+	    } elsif($key eq "DOD"){
+		$final_set .= ", i_326428='$value', i_328476='".$minimal_id{$key}."'";
+	    } elsif($key eq "HOH"){
+		$final_set .= ", i_326422='$value', i_328483='".$minimal_id{$key}."'";
+	    }
+	}
+	$final_set = "REPLACE a_326233 SET id=@row2[0] $final_set";
+	my $sth = $dbh->prepare($final_set);
+	$sth->execute();
+    }
+    $dbh->commit;
+}

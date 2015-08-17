@@ -1,8 +1,7 @@
 #include <iostream>
 
 #include <GL/GLee.h>         // No need to link to GL/gl.h
-//#include <GL/glfw.h>      // Include OpenGL Framework library
-#include <GLFW/glfw3.h>
+#include <GL/glfw.h>      // Include OpenGL Framework library
 #include <GL/freeglut.h>  // Include FreeGLUT so we can easily draw spheres and calculate our viewing frustrum
 #include <math.h>         // Used only for sin() and cos() functions
 #include <cstdio>
@@ -55,6 +54,7 @@ int atomos_quantidade = 0;
 GLfloat caixa_tamanho = 2000;
 int cont_loop_electron = 0;
 int cont_loop_electron_time = 1;
+static unsigned int nSeed = 5323;
 
 //GLfloat collision_proximityE = 0.4;
 //GLfloat collision_angleE = 0.5;
@@ -63,10 +63,11 @@ int cont_loop_electron_time = 1;
 //GLfloat collision_angleE_HB = 1.5;
 GLfloat max_distance_hydrogen_bond = 4.5;
 
-GLint forca_externa_contador_max = 4;
-//GLint forca_externa_contador_max = 23;
-GLint forca_externa_contador_max_t = 10;
-//GLint forca_externa_contador_max_t = 0;
+
+//GLint forca_externa_contador_max = 4;
+GLint forca_externa_contador_max = 0;
+//GLint forca_externa_contador_max_t = 10;
+GLint forca_externa_contador_max_t = 0;
 //GLint forca_externa_contador_max_t = 8;
 GLint forca_externa_contador_max_hb = 99999999;
 GLint calibration_precision = 10;
@@ -223,7 +224,6 @@ void load_protein_models(string PDBID);
 
 // util.cu
 void distance_calibration();
-void distance_calibration_pdb(string PDBID);
 int get_amino_number(const char *amino_sigla);
 int get_atom_number(const char *atomo_letra_local);
 void hsvtorgb(unsigned char *r, unsigned char *g, unsigned char *b, unsigned char h, unsigned char s, unsigned char v);
@@ -317,7 +317,7 @@ void add_energy() {
 void initGL() {
 	// ----- GLFW Settings -----
 
-//	glfwDisable(GLFW_MOUSE_CURSOR); // Hide the mouse cursor
+	glfwDisable(GLFW_MOUSE_CURSOR); // Hide the mouse cursor
 
 	// ----- Window and Projection Settings -----
 
@@ -411,7 +411,6 @@ void initGL() {
 	srand((unsigned) time(0));
 
 	distance_calibration();
-	distance_calibration_pdb("1wqc");
 	load_protein("1wqc");
 	load_protein_models("1wqc");
 
@@ -475,7 +474,6 @@ void moveCamera() {
 
 // Function to deal with mouse position changes, called whenever the mouse cursorm moves
 void handleMouseMove(int mouseX, int mouseY) {
-	printf("Evento mouse\n");
 	GLfloat vertMouseSensitivity = 10.0f;
 	GLfloat horizMouseSensitivity = 10.0f;
 
@@ -1560,6 +1558,8 @@ void drawE_HB(GLfloat oy, GLfloat oz, GLfloat ox, GLint atomN) {
 // Function to draw our spheres and position the light source
 void drawScene() {
 
+//	GLfloat calcula = 0.011111 + 0.188889;
+//printf("Resultado: %f\n", calcula);
 // Clear the screen and depth buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 // Reset the matrix
@@ -1573,25 +1573,30 @@ void drawScene() {
 	glTranslatef(0.0f, 0.0f, sunZLocation);
 	glColor3ub(255, 255, 0);
 	glutWireCube(2.0 * caixa_tamanho);
-// Aidicionando ribosome
-//	add_pdb();
 
-// --------- Testando erros --------------
-	/*
-	 if(contador_restart > contador_restart_max_error){
-	 printf("Ultrapassou limite de erro %d\n",contador_restart);
-	 restaura_posicoes();
-	 change_properties();
-	 contador_restart_life = 0;
-	 }
-	 contador_restart_life++;
-	 */
+// Aidicionando ribosome
+	add_pdb();
+//	add_pdb_amino();
+//	glColor3ub(255, 255, 255);
+//	glTranslatef(0.0, 0.0, 0.0);
+//	glutSolidSphere(10.0f, 6, 6);
+//	glTranslatef(0.0, 0.0, 0.0);
+
+//	printf("CA 1\n");
+	if(contador_restart > contador_restart_max_error){
+		printf("Ultrapassou limite de erro %d\n",contador_restart);
+		restaura_posicoes();
+		change_properties();
+		contador_restart_life = 0;
+	}
+	contador_restart_life++;
 
 	if (show_comparation) {
 		compare_protein_build_MD(1);
 	}
 	contador_restart = 0;
 	for (GLint i = 0; i < atomos_quantidade; i++) {
+//		printf("EEE 1: %f\n", velocidade_y[2]);
 		if (posy[i] > caixa_tamanho) {
 			velocidade_y[i] *= -1;
 			if (posy[i] > caixa_tamanho + 0.5) {
@@ -1625,11 +1630,13 @@ void drawScene() {
 				posz[i] = caixa_tamanho * -1;
 			}
 		}
+//		printf("EEE 2: %f\n", velocidade_y[2]);
 
 // ===================== Movendo ======================
 		posx[i] += velocidade_x[i];
 		posy[i] += velocidade_y[i];
 		posz[i] += velocidade_z[i];
+//		printf("CA 2 %d\n",i);
 // ================ Checa colisao de nucleo ================
 		GLint same_amino = 0; //0 same / 1 different
 		for (GLint ii = 0; ii < atomos_quantidade; ii++) {
@@ -1655,39 +1662,90 @@ void drawScene() {
 
 		// ================ Checa tensao de nucleo ================
 		for (GLint ii = 0; ii < atomos_quantidade; ii++) {
+//			printf("CA 3.1 %d\n",i);
 			if (i != ii) {
+//				printf("CA 3.2 %d\n",i);
 				same_amino = 0;
 				if (amino_sequencial[i] == amino_sequencial[ii]) {
+//					same_amino = 1;
+//					printf("CA 3.3 %d\n",i);
+//				}
+//				printf("CA 3.4 (%d %d)\n",i,ii);
+//				printf("Overflow %d %d\n",atomo_letraN[i],atomo_letraN[ii]);
+//				printf("CA 3.4.5 %d\n",amino[ii]);
+//				printf("CA 3.4.4 %d\n",same_amino);
+//				printf("CA 3.4.3 %f\n",atomo_letraN[i]);
+//				printf("CA 3.4.2 %f\n",amino[i]);
+//				printf("CA 3.4.1 %f\n",calibrationMax[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]]);
+					// Parei aqui
 					if (show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]) >= calibrationMax[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]]) {
+//					printf("CA 3.5 %d\n",i);
+//					printf("Tensao de nucleo %f %f %d %d %d %d\n", show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]), calibrationMax[amino[i]][atomo_letraN[i]][0][amino[ii]][atomo_letraN[ii]],i,ii,amino[i],amino[ii]);
+//					printf("Tensaog de nucleo %f %d %d %d %d %d %d\n", calibrationMax[amino[i]][atomo_letraN[i]][0][amino[ii]][atomo_letraN[ii]], i, ii, amino[i], amino[ii], atomo_letraN[i], atomo_letraN[ii]);
+						// Aqui ta o problema definir MAX entre atomos de aminoacidos diferentes
+
+//						if (forca_externa_contador == forca_externa_contador_max && show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]) < calibration_minimal_distance) {
 						if (forca_externa_contador_t == forca_externa_contador_max_t && show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]) < calibration_minimal_distance) {
+//							printf("CA %d %f\n", i, calibrationMax[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]]);
 							collision3D(i, ii, "tensao");
 						} else if (electron_arested[i][0][0] == ii || electron_arested[i][1][0] == ii || electron_arested[i][2][0] == ii || electron_arested[i][3][0] == ii) {
 							collision3D(i, ii, "tensao");
 						}
 					}
+//					}
 				} else if (electron_arested[i][0][0] == ii || electron_arested[i][1][0] == ii || electron_arested[i][2][0] == ii || electron_arested[i][3][0] == ii) {
 					same_amino = 1;
 					if (show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]) >= calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]] + 0.04) {
+
+//				} else if ((electron_arested[i][0][0] == ii || electron_arested[i][1][0] == ii || electron_arested[i][2][0] == ii || electron_arested[i][3][0] == ii) && show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]) >= 1.33) {
+						//1.33 Distancia entre N e C
+
+//					printf("CA %f %f\n", calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]], calibrationMax[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]]);
+//						printf("T1: %f %f\n", show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]), calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]]);
 						collision3D(i, ii, "tensao");
 					}
+//				} else if (forca_externa_contador_hb == forca_externa_contador_max_hb && amino_sequencial[i] != amino_sequencial[ii] && calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]] < max_distance_hydrogen_bond && (atomo_letraN[i] == 11 || atomo_letraN[i] == 15) && (atomo_letraN[ii] == 11 || atomo_letraN[ii] == 15)) {
 				} else if (forca_externa_contador_hb == forca_externa_contador_max_hb && amino_sequencial[i] != amino_sequencial[ii] && calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]] < max_distance_hydrogen_bond && ((atomo_letraN[i] == 11 && atomo_letraN[ii] == 15) || (atomo_letraN[i] == 15 && atomo_letraN[ii] == 11))) {
+//				} else if (forca_externa_contador_t == forca_externa_contador_max_t && amino_sequencial[i] != amino_sequencial[ii] && ((atomo_letraN[i] == 11 || atomo_letraN[i] == 15) && (atomo_letraN[ii] == 11 || atomo_letraN[ii] == 15))) {
+//				} else if (forca_externa_contador_t == forca_externa_contador_max_t && amino_sequencial[i] != amino_sequencial[ii]) {
 					// Hrydrogen bonds
 					same_amino = 1;
+//					if(calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]] < max_distance_hydrogen_bond
+//					if (calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]] < 3.0) {
 					if (show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]) < max_distance_hydrogen_bond) {
 						if (show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]) >= calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]] + 0.04) {
 							collision3D(i, ii, "tensaoHB");
+//							printf("D %d %d %f\n", atomo_letraN[i], atomo_letraN[ii], calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]]);
 						}
 					}
+//					}
+//					}
 				} else if (electron_arested[i][0][0] == ii || electron_arested[i][1][0] == ii || electron_arested[i][2][0] == ii || electron_arested[i][3][0] == ii) {
 					same_amino = 1;
+//					printf("T2: %d %d %f %f\n", atomo_letraN[i], atomo_letraN[ii], show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]), calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]]);
 				}
+//				printf("CA 3.8 %d\n",i);
+
+//				else {
+//					if ((atomo_letraN[i] == 11 || atomo_letraN[i] == 15) && (atomo_letraN[ii] == 11 || atomo_letraN[ii] == 15)) {
+//						if (atomo_letraN[i] != atomo_letraN[ii]) {
+//							printf("D %d %d\n", atomo_letraN[i], atomo_letraN[ii]);
+//						}
+//					}
+//				}
 			}
 		}
+//		printf("CA 4 %d\n",i);
 
 // ===================== Nucleo ======================
 		if (show_comparation) {
+//			printf("Aminos %d\n",amino_sequencial[i]);
 			int temp = 0;
+//			printf("Seq %d  Label %s MD %f  MIN %f MAX %f \n",amino_sequencial[i],atomo_letraL[i].c_str(), atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"], atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MAX"]);
 			if (atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] >= atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"] && atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] <= atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MAX"]) {
+//				glColor3ub(0, 255, 0);
+//				printf("OK\n");
+
 			} else if (atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] < atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"]) {
 				temp = atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MD"] - atom_statistic[amino_sequencial[i]][atomo_letraL[i]]["MIN"];
 				contador_restart += (temp * -1);
@@ -1721,9 +1779,13 @@ void drawScene() {
 		if (show_base_line == false) {
 			if (show_base == false || (show_base == true && atomo_base[i] == true)) {
 				if (show_perimetro) {
+//			glutSolidSphere(nucleo_proximity_free[i], 4, 4);
 					glutSolidSphere(nucleo_proximity_free[i], 30, 30);
 				} else {
+//					glutSolidSphere(nucleo_proximity[i] * .35, 30, 30);
 					glutSolidCube(nucleo_proximity[i] * .50f);
+
+					//			glutSolidSphere(nucleo_proximity[i], 4, 4);
 				}
 			}
 		}
@@ -1764,6 +1826,7 @@ void drawScene() {
 			glVertex3f(0.0, 0.0, -caixa_tamanho - posz[i]);
 			glEnd();
 		}
+//		printf("EEE 3: %f\n", velocidade_y[2]);
 // ===================== Circulo do perimetro ==============
 //		if (show_perimetro) {
 //			glColor3ub(255, 255, 0);
@@ -1776,15 +1839,32 @@ void drawScene() {
 			glTranslatef(velocidade_x[i] * 5, velocidade_y[i] * 5, velocidade_z[i] * 5);
 			glutSolidSphere(nucleo_proximity[i] * .35, 6, 6);
 			glTranslatef(-velocidade_x[i] * 5, -velocidade_y[i] * 5, -velocidade_z[i] * 5);
+//			glTranslatef(velocidade_x[i] * 100, velocidade_y[i] * 100, velocidade_z[i] * 100);
+//			glutSolidSphere(nucleo_proximity[i], 6, 6);
+//			glTranslatef(-velocidade_x[i] * 100, -velocidade_y[i] * 100, -velocidade_z[i] * 100);
 		}
-		// ===================== Esfera Electron ======================
-		// Trying to use PKa, but actualy I think I shouldnt
+// ============================================================
+//		printf("EEE 4: %f\n", velocidade_y[2]);
+// ===================== Esfera Electron ======================
+// Trying to use PKa, but actualy I think I shouldnt
 		GLint electron_quantidade_pka = electron_quantidade[i];
 		if (atomo_letra[i] == 'N' && i > 3) {
 			electron_quantidade_pka = electron_quantidade[i] - 1;
 		}
 
 		for (GLint Es = 0; Es < electron_quantidade_pka; Es++) {
+			if (cont_loop_electron == cont_loop_electron_time && electron_arested[i][Es][0] == -1) {
+				GLfloat resultado_l = 0;
+				GLfloat resultado_l2 = 0;
+				nSeed = (8253729 * nSeed + 2396403);
+				resultado_l = nSeed % 359;
+				nSeed = (8253729 * nSeed + 2396403);
+				resultado_l2 = nSeed % 359;
+//				bool segue = false;
+				electron_y[i][Es] = resultado_l;
+				electron_z[i][Es] = resultado_l2;
+
+			}
 			if (electron_arested[i][Es][0] == -1) {
 				glColor3ub(255, 0, 0);
 			} else {
@@ -1814,9 +1894,11 @@ void drawScene() {
 				if (posy[i] > posy[electron_arested[i][Es][0]]) {
 					dify = 0 - show_distance(posy[i], posy[electron_arested[i][Es][0]], 0.0, 0.0, 0.0, 0.0);
 					difyE = electron_raio[i] * dify / distancef;
+					//					printf("Distance %f R %f  Posy %f Posy2 %f dify %f\n",distancef, electron_raio[i],posy[i],posy[electron_arested[i][Es][0]],dify);
 				} else {
 					dify = show_distance(posy[i], posy[electron_arested[i][Es][0]], 0.0, 0.0, 0.0, 0.0);
 					difyE = electron_raio[i] * dify / distancef;
+					//					printf("A2\n");
 				}
 				if (posz[i] > posz[electron_arested[i][Es][0]]) {
 					difz = 0 - show_distance(posz[i], posz[electron_arested[i][Es][0]], 0.0, 0.0, 0.0, 0.0);
@@ -1838,17 +1920,229 @@ void drawScene() {
 				if (difzE != difzE) {
 					difzE = 0.0;
 				}
+
+				if (show_base_line == false || (show_base_line && atomo_base[electron_arested[i][Es][0]] && atomo_base[i])) {
+//					glTranslatef(difxE, difyE, difzE);
+//					glutSolidSphere(0.1f, 3, 3);
+//					glTranslatef(-difxE, -difyE, -difzE);
+				}
+
 				posEx[i][Es] = posx[i] + difxE;
 				posEy[i][Es] = posy[i] + difyE;
 				posEz[i][Es] = posz[i] + difzE;
 
+			} else {
+				if (show_base_line == false || (show_base_line && atomo_base[electron_arested[i][Es][0]] && atomo_base[i])) {
+					//drawE(electron_y[i][Es], electron_z[i][Es], electron_raio[i], i, Es);
+				}
 			}
 		}
+
+// ================ Checa colisao de electron ================
+//		printf("E0.1: %f\n", velocidade_y[2]);
+//		bool isclose = false;
+//		for (GLint Es = 0; Es < electron_quantidade_pka; Es++) {
+//			for (GLint ii = 0; ii < atomos_quantidade; ii++) {
+//				if (i != ii) {
+//					for (GLint Es2 = 0; Es2 < electron_quantidade[ii]; Es2++) {
+//						if (show_distance(posEx[i][Es], posEx[ii][Es2], posEy[i][Es], posEy[ii][Es2], posEz[i][Es], posEz[ii][Es2]) <= collision_proximityE) {
+//							isclose = true;
+//							if (angle_colision(i, ii)) {
+//								if (electron_arested[ii][Es2][0] != -1 && electron_arested[ii][Es2][0] != i && electron_arested[ii][Es2][1] != Es) {
+//								} else if (electron_arested[i][Es][0] == -1 && electron_arested[ii][Es2][0] == -1) {
+//									GLint count_bonds = 0;
+//									for (GLint Es3 = 0; Es3 < electron_quantidade_pka; Es3++) {
+//										if (electron_arested[i][Es3][0] == ii) {
+//											count_bonds++;
+////											printf("Ja tinha bond \n");
+//										}
+//									}
+//									if (count_bonds < 1) {
+////										printf("Juntando i:%d Es:%d ii:%d Es2:%d\n",i,Es,ii,Es2);
+//										electron_arested[i][Es][0] = ii;
+//										electron_arested[i][Es][1] = Es2;
+//										electron_arested[ii][Es2][0] = i;
+//										electron_arested[ii][Es2][1] = Es;
+////										pause();
+//										printf("aqui3\n");
+//										collision3D(i, ii, "tensao");
+//									}
+//								} else {
+//									printf("aqui4\n");
+//									collision3D(i, ii, "tensao");
+//								}
+//							}
+//						}
+////						if (electron_arested[i][Es][0] == ii && electron_arested[i][Es][1] == Es2) {
+//////							GLfloat distancia_electron_nucleo_local = abs(show_distance(posEx[i][Es], posx[ii], posEy[i][Es], posy[ii], posEz[i][Es], posz[ii]));
+////							GLfloat distancia_electron_nucleo_local = abs(show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]));
+////							if (distancia_electron_nucleo_local <= electron_arested_min_distance[i][Es] || distancia_electron_nucleo_local <= electron_arested_min_distance[ii][Es2]) {
+//////							if (abs(show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii])) <= (electron_raio[i] + electron_raio[ii])) {
+//////								if (abs(show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii])) <= (electron_raio[i] + nucleo_proximity[ii]) || abs(show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii])) <= (electron_raio[ii] + nucleo_proximity[i])) {
+//////									GLfloat distancia_electron_nucleo_local = show_distance(posEx[i][Es], posx[ii], posEy[i][Es], posy[ii], posEz[i][Es], posz[ii]);
+//////								nucleo_proximity_free[i]
+//////									if (distancia_electron_nucleo_local <= electron_arested_min_distance[i][Es] || distancia_electron_nucleo_local <= electron_arested_min_distance[ii][Es2]) {
+//////									    if (distancia_electron_nucleo_local <= nucleo_proximity[i] || distancia_electron_nucleo_local <= nucleo_proximity[ii]) {
+//////										printf("EAMD1: %d %f\n",i,electron_arested_min_distance[i][Es]);
+//////										printf("EAMD2: %d %f\n",ii,electron_arested_min_distance[ii][Es2]);
+//////								printf("aqui5\n");
+//////								collision3D(i, ii, "electron_nucleo");
+//////									}
+//////								}
+////							} else {
+//////								electron_arested[i][Es][0] = -1;
+//////								electron_arested[ii][Es2][0] = -1;
+//////								printf("aqui6\n");
+//////								collision3D(i, ii, "tensao");
+////							}
+////						}
+////						else if (electron_arested[i][Es][0] == ii && electron_arested[i][Es][1] == Es2) {
+//////							printf("AE1\n");
+////						}
+//					}
+//				}
+//			}
+//		}
+////		printf("E0.2: %f\n", velocidade_y[2]);
+//		// ===================== Esfera Electron Hydrogen bond ======================
+//		if (cont_loop_electron == cont_loop_electron_time && nucleo_proximity_HB[i] > 0) {
+//			if (electron_arested_HB[i] == -1) {
+//				GLfloat resultado_l = 0;
+//				GLfloat resultado_l2 = 0;
+//				nSeed = (8253729 * nSeed + 2396403);
+//				resultado_l = nSeed % 359;
+//				nSeed = (8253729 * nSeed + 2396403);
+//				resultado_l2 = nSeed % 359;
+//				bool segue = false;
+//				electron_y_HB[i] = resultado_l;
+//				electron_z_HB[i] = resultado_l2;
+//				if (electron_arested_HB[i] == -1) {
+//					glColor3ub(255, 255, 82);
+//				} else {
+//					glColor3ub(255, 200, 100);
+//				}
+//			}
+//		}
+//
+//		// ================ Checa colisao de Hydrogen Bond ================
+//		if (atomo_letra[i] == 'H' && nucleo_proximity_HB[i] > 0 && electron_arested_HB[i] == -1) {
+////		bool isclose = false;
+////		for (GLint Es = 0; Es < electron_quantidade[i]; Es++) {
+//			for (GLint ii = 0; ii < atomos_quantidade; ii++) {
+//				if (i != ii && atomo_letra[ii] != 'H' && nucleo_proximity_HB[ii] > 0 && electron_arested_HB[ii] == -1) {
+////					printf("A1 %f %f\n",show_distance(posEx_HB[i], posEx_HB[ii], posEy_HB[i], posEy_HB[ii], posEz_HB[i], posEz_HB[ii]),collision_proximityE_HB);
+////					for (GLint Es2 = 0; Es2 < electron_quantidade[ii]; Es2++) {
+//					if (abs(show_distance(posEx_HB[i], posEx_HB[ii], posEy_HB[i], posEy_HB[ii], posEz_HB[i], posEz_HB[ii])) <= collision_proximityE_HB) {
+//						isclose = true;
+////						printf("Perto: %f\n", show_distance(posEx_HB[i], posEx_HB[ii], posEy_HB[i], posEy_HB[ii], posEz_HB[i], posEz_HB[ii]));
+//						if (angle_colision(i, ii) && atomo_letra[i] != atomo_letra[ii]) {
+////							printf("Colisao detectada: %d %c %d %c \n", atomo_letra[i], atomo_letra[i], atomo_letra[ii], atomo_letra[ii]);
+////								if (electron_arested[ii][Es2][0] != -1 && electron_arested[ii][Es2][0] != i && electron_arested[ii][Es2][1] != Es) {
+////								} else if (electron_arested[i][Es][0] == -1 && electron_arested[ii][Es2][0] == -1) {
+////									GLint count_bonds = 0;
+////									for (GLint Es3 = 0; Es3 < electron_quantidade[i]; Es3++) {
+////										if (electron_arested[i][Es3][0] == ii) {
+////											count_bonds++;
+////											//											printf("Ja tinha bond \n");
+////										}
+////									}
+////									if (count_bonds < 1) {
+////										//										printf("Juntando i:%d Es:%d ii:%d Es2:%d\n",i,Es,ii,Es2);
+//							if (electron_arested[ii][0][0] != i && electron_arested[ii][1][0] != i && electron_arested[ii][2][0] != i && electron_arested[ii][3][0] != i) {
+//								electron_arested_HB[i] = ii;
+//								electron_arested_HB[ii] = i;
+//								collision3D(i, ii, "tensao");
+//								printf("Adicionado colisao\n");
+////								pause();
+//							}
+////										electron_arested[ii][Es2][1] = Es;
+////										//										pause();
+////										collision3D(i, ii, "tensao");
+////									}
+////								} else {
+////									collision3D(i, ii, "tensao");
+////								}
+//						}
+//					}
+//
+//				}
+//			}
+//
+//		}
+//		if (electron_arested_HB[i] != -1) {
+////			printf("Desenhando linha do electron\n");
+////			printf("E1: %f\n", velocidade_y[2]);
+////			glColor3ub(255, 155, 255);
+//			glColor3ub(255, 255, 0);
+//			glBegin(GL_LINES);
+//			glVertex3f(0.0, 0.0, 0.0);
+//			GLfloat difx = 0.0;
+//			GLfloat dify = 0.0;
+//			GLfloat difz = 0.0;
+//
+//			GLfloat difxE = 0.0;
+//			GLfloat difyE = 0.0;
+//			GLfloat difzE = 0.0;
+//			GLfloat distancef = show_distance(posx[i], posx[electron_arested_HB[i]], posy[i], posy[electron_arested_HB[i]], posz[i], posz[electron_arested_HB[i]]);
+//			if (posx[i] > posx[electron_arested_HB[i]]) {
+//				difx = 0 - show_distance(posx[i], posx[electron_arested_HB[i]], 0.0, 0.0, 0.0, 0.0);
+//				difxE = electron_raio_HB[i] * difx / distancef;
+//			} else {
+//				difx = show_distance(posx[i], posx[electron_arested_HB[i]], 0.0, 0.0, 0.0, 0.0);
+//				difxE = electron_raio_HB[i] * difx / distancef;
+//			}
+//			if (posy[i] > posy[electron_arested_HB[i]]) {
+//				dify = 0 - show_distance(posy[i], posy[electron_arested_HB[i]], 0.0, 0.0, 0.0, 0.0);
+//				difyE = electron_raio_HB[i] * dify / distancef;
+//				//					printf("Distance %f R %f  Posy %f Posy2 %f dify %f\n",distancef, electron_raio[i],posy[i],posy[electron_arested[i][Es][0]],dify);
+//			} else {
+//				dify = show_distance(posy[i], posy[electron_arested_HB[i]], 0.0, 0.0, 0.0, 0.0);
+//				difyE = electron_raio_HB[i] * dify / distancef;
+//				//					printf("A2\n");
+//			}
+//			if (posz[i] > posz[electron_arested_HB[i]]) {
+//				difz = 0 - show_distance(posz[i], posz[electron_arested_HB[i]], 0.0, 0.0, 0.0, 0.0);
+//				difzE = electron_raio_HB[i] * difz / distancef;
+//			} else {
+//				difz = show_distance(posz[i], posz[electron_arested_HB[i]], 0.0, 0.0, 0.0, 0.0);
+//				difzE = electron_raio_HB[i] * difz / distancef;
+//			}
+//			glVertex3f(difx, dify, difz);
+//			glEnd();
+//			if (difxE != difxE) {
+//				difxE = 0.0;
+//			}
+//			if (difyE != difyE) {
+//				difyE = 0.0;
+//			}
+//			if (difzE != difzE) {
+//				difzE = 0.0;
+//			}
+//			glTranslatef(difxE, difyE, difzE);
+//			glutSolidSphere(0.2f, 3, 3);
+//			glTranslatef(-difxE, -difyE, -difzE);
+//
+//			posEx_HB[i] = posx[i] + difxE;
+//			posEy_HB[i] = posy[i] + difyE;
+//			posEz_HB[i] = posz[i] + difzE;
+//
+//			if (show_distance(posEx_HB[i], posEx_HB[electron_arested_HB[i]], posEy_HB[i], posEy_HB[electron_arested_HB[i]], posEz_HB[i], posEz_HB[electron_arested_HB[i]]) <= collision_proximityE_HB_tensao) {
+//				collision3D(i, electron_arested_HB[i], "tensao");
+//			} else if (abs(show_distance(posx[i], posx[electron_arested_HB[i]], posy[i], posy[electron_arested_HB[i]], posz[i], posz[electron_arested_HB[i]])) <= (electron_raio_HB[i] + nucleo_proximity_HB[electron_arested_HB[i]]) || abs(show_distance(posx[i], posx[electron_arested_HB[i]], posy[i], posy[electron_arested_HB[i]], posz[i], posz[electron_arested_HB[i]])) <= (electron_raio_HB[electron_arested_HB[i]] + nucleo_proximity_HB[i])) {
+//				collision3D(i, electron_arested_HB[i], "electron_nucleo");
+//			}
+//		} else {
+////			if (show_base_line == false || (show_base_line && atomo_base[electron_arested_HB[i]] && atomo_base[i])) {
+//			drawE_HB(electron_y_HB[i], electron_z_HB[i], electron_raio_HB[i], i);
+////			}
+//		}
+//
 // ===================================================
 		glTranslatef(-posx[i], -posy[i], -posz[i]);
 
 // ===================================================
 	}
+//	printf("E4: %f\n", velocidade_y[2]);
 	if (cont_loop_electron == cont_loop_electron_time) {
 		cont_loop_electron = 0;
 	}
@@ -1878,12 +2172,15 @@ void drawScene() {
 	forca_externa_contador_hb++;
 	if (forca_externa_contador > forca_externa_contador_max) {
 		forca_externa_contador = 0;
+//		printf("Resetando\n");
 	}
 	if (forca_externa_contador_t > forca_externa_contador_max_t) {
 		forca_externa_contador_t = 0;
+//		printf("Resetando\n");
 	}
 	if (forca_externa_contador_hb > forca_externa_contador_max_hb) {
 		forca_externa_contador_hb = 0;
+//		printf("Resetando\n");
 	}
 
 // -----------------------------------------------------------
@@ -1921,12 +2218,8 @@ void drawScene() {
 	glfwSwapBuffers();				// Swap the buffers to display the scene (so we don't have to watch it being drawn!)
 }
 
-//void mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
-void mouse_button_callback(GLFWwindow window, int button, int action, int mods){
-	printf("MBC\n");
-//    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-//        popup_menu();
-}
+// Called like:
+//changeThem(&a, &b);
 
 // Fire it up...
 int main(int argc, char **argv) {
@@ -1998,7 +2291,6 @@ int main(int argc, char **argv) {
 
 // Specify the function which should execute when the mouse is moved
 	glfwSetMousePosCallback(handleMouseMove);
-//	glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 	while (running == true) {
 		calculaposicoes();

@@ -1,0 +1,134 @@
+#!/usr/bin/perl
+use XML::Simple;
+use Data::Dumper;
+use DBI;
+$my_db ="a00s_230";
+$my_user = "a00s_230";
+$my_pass = "bm";
+$my_host="127.0.0.1";
+
+$limit = @ARGV[0];
+$limit_to = @ARGV[1];
+chomp $limit;
+chomp $limit_to;
+
+if(length($limit) < 1){
+    print "./collect_xml.444 [number to import]\n";
+}
+$dbh = DBI->connect("DBI:mysql:$my_db:$my_host", $my_user, $my_pass, {AutoCommit => 0});
+# ---------------------- working --------------------------------
+# $query = "SELECT LCASE(pdbid) FROM (SELECT i_305373 AS pdbid FROM a_305359 GROUP BY i_305373 HAVING count(*) = 1) AS tabtemp 
+#            LEFT JOIN a_304461 ON i_304516=pdbid WHERE i_304882='SOLUTION NMR' AND i_304850<>'DNA' AND pdbid='1b9q'";
+
+$query = "SELECT pdbid FROM (SELECT LCASE(pdbid) pdbid FROM (SELECT i_305373 AS pdbid FROM a_305359 WHERE i_309616 IS NULL GROUP BY i_305373 HAVING count(*) = 1) AS tabtemp LEFT JOIN a_304461 ON i_304516=pdbid 
+   WHERE i_304882='SOLUTION NMR' AND i_304850<>'DNA') tabtemp2 LEFT JOIN a_306280 ON i_307676=pdbid WHERE a_306280.id IS NULL LIMIT $limit,$limit_to";
+$sqlQuery  = $dbh->prepare($query);
+$sqlQuery->execute;
+while (@row= $sqlQuery->fetchrow_array()) {
+    $contadortotal++;
+    $download_done = 0;
+    $count_download = 0;
+    while($download_done == 0){
+	$count_download++;
+	print "--------------------------- ".@row[0]." ------------ $contadortotal ---------------\n";
+	$pdbid = @row[0];
+	$directory =  @row[0];
+	$directory =~ s/^.//;
+	$directory =~ s/.$//;
+#	`rm pdb_xml.gz`;
+#	`rm pdb_xml`;
+#	system("wget -O pdb_xml.gz ftp://ftp.wwpdb.org/pub/pdb/data/structures/divided/XML/$directory/@row[0]\.xml.gz");
+#	`gunzip -f pdb_xml.gz`;
+	$check = `grep -i 'datablockName="@row[0]"' files/@row[0]\.xml`;
+	chomp $check;
+	if(length($check) == 0){ # For some reason the wget wont run some times, this will avoid adding a wrong sequence
+	    print "\n!!!!!!!!!!!! Download error !!!!!!!!!!!!!\n";
+	    if($count_download == 100){		
+		exit;
+	    }
+	    sleep(30);
+	} else {
+	    $download_done = 1;
+	}
+    }
+    $abortar = `grep 'conditions_id="2"' files/@row[0]\.xml`;
+    if($abortar){
+	# Left to be solve later
+	print "\n\nConditions 2 !!!! \n\n";
+	$sth = $dbh->prepare(q{UPDATE a_305359 SET i_309616=1 WHERE i_305373=?});
+	$sth->execute($pdbid);
+	$dbh->commit;
+	`rm files/@row[0]\.xml`;
+	next;
+    };
+    my $booklist = XMLin('files/'.@row[0].'.xml');
+### NMR!!! ############## IONIC STRENGTH, pH, PRESSURE AND TEMPERATURE ################
+    $sth = $dbh->prepare(q{UPDATE a_304461 SET i_306201=?, i_306214=?, i_306208=?, i_306222=? WHERE i_304516=?});
+    $sth->execute(
+    	$booklist->{'PDBx:pdbx_nmr_exptl_sample_conditionsCategory'}->{'PDBx:pdbx_nmr_exptl_sample_conditions'}->{'PDBx:ionic_strength'},
+    	$booklist->{'PDBx:pdbx_nmr_exptl_sample_conditionsCategory'}->{'PDBx:pdbx_nmr_exptl_sample_conditions'}->{'PDBx:pH'},
+    	$booklist->{'PDBx:pdbx_nmr_exptl_sample_conditionsCategory'}->{'PDBx:pdbx_nmr_exptl_sample_conditions'}->{'PDBx:pressure'},
+    	$booklist->{'PDBx:pdbx_nmr_exptl_sample_conditionsCategory'}->{'PDBx:pdbx_nmr_exptl_sample_conditions'}->{'PDBx:temperature'},
+    	$pdbid
+    );
+    $dbh->commit;
+    
+# ---------------------------------------------------------------
+############# NUMBER OF ENSEMBLE SUBMITED ################
+    $query = "SELECT id FROM a_305359 WHERE i_305373='$pdbid'";
+    $sqlQuery2  = $dbh->prepare($query);
+    $sqlQuery2->execute;
+    $chain_id = $sqlQuery2->fetchrow_array();
+    print "CID: $chain_id\n";        
+    $ensembled_number = $booklist->{'PDBx:pdbx_nmr_ensembleCategory'}->{'PDBx:pdbx_nmr_ensemble'}->{'PDBx:conformers_submitted_total_number'};
+    print " AN: $ensembled_number \n";
+    @mysql_ids = ();
+    for($i = 1; $i <= $ensembled_number; $i++){
+	my $sth = $dbh->prepare(q{INSERT INTO m_306261 SET id=NULL, r_306557=?});
+	$sth->execute($chain_id);
+	$ensemble_id = $dbh->{'mysql_insertid'};
+	$sth = $dbh->prepare(q{INSERT INTO a_306269 (id, i_306273) VALUES (?,?)});
+	$sth->execute($ensemble_id, $i);
+	@mysql_ids[$i] = $ensemble_id;
+    }
+    $dbh->commit;
+    ########### ATOMO POSITIONS #############
+    foreach my $atomid (keys %{$booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}}) {
+	if($contp == 1000){
+	    print "$contadortotal -> $pdbid $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:pdbx_PDB_model_num'} \t$booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:type_symbol'}\t$booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:Cartn_x'}\t$booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:Cartn_y'}\t$booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:Cartn_z'}\n";
+	    $contp = 0;
+	}
+	$contp++;
+	my $sth = $dbh->prepare(q{INSERT INTO m_306265 SET id=NULL, r_306494=?});
+	$sth->execute(@mysql_ids[$booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:pdbx_PDB_model_num'}]);
+	$ensemble_atom_id = $dbh->{'mysql_insertid'};
+	$sth = $dbh->prepare('INSERT INTO a_306280 ( id, i_306284, i_306291, i_306299, i_306307, i_306315, i_306323, i_306330, i_306337,
+	    i_306344, i_306351, i_306358, i_306365, i_306372, i_306379, i_306393, i_306401, i_306408, i_307676) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+        $sth->execute(
+	    $ensemble_atom_id, # id
+	    $atomid, # i_306284
+	    $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:B_iso_or_equiv'}, # i_306291
+	    $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:Cartn_x'}, # i_306299
+	    $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:Cartn_y'}, # i_306307
+	    $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:Cartn_z'}, # i_306315
+	    $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:auth_asym_id'}, # i_306323
+	    $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:auth_atom_id'}, # i_306330
+	    $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:auth_comp_id'}, # i_306337
+	    $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:auth_seq_id'}, # i_306344
+	    $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:group_PDB'}, # i_306351
+	    $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:label_asym_id'}, # i_306358
+	    $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:label_atom_id'}, # i_306365
+	    $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:label_comp_id'}, # i_306372
+	    $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:label_entity_id'}, # i_306379
+	    $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:occupancy'}, # i_306393
+	    $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:pdbx_PDB_model_num'}, # i_306401
+	    $booklist->{'PDBx:atom_siteCategory'}->{'PDBx:atom_site'}->{$atomid}->{'PDBx:type_symbol'}, # i_306408
+	    uc($pdbid) # i_307676
+	);
+     }   
+     $dbh->commit;
+     `rm files/@row[0]\.xml`;
+print "\n -------------------------------------------------------------\n";
+}
+$rc = $sqlQuery->finish;
+print "\n";

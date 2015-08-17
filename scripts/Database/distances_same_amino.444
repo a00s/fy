@@ -1,0 +1,37 @@
+#!/usr/bin/perl
+use DBI;
+$my_db ="a00s_230";
+$my_user = "a00s_230";
+$my_pass = "testando";
+$my_host="127.0.0.1";
+$aminoacid = "ILE";
+
+$dbh = DBI->connect("DBI:mysql:$my_db:$my_host", $my_user, $my_pass, {AutoCommit => 1});
+# $query = "SELECT i_307676, i_306401, i_306344/*AminSeq*/, i_306401/*ModelNumber*/ FROM a_306280 LEFT JOIN a_304461 ON i_304516=i_307676 WHERE i_304874 BETWEEN 0.0001 AND 1 AND i_371162=1 AND i_306337='$aminoacid' AND i_307676='1A6M' GROUP BY i_307676, i_306401, i_306344 ORDER BY i_307676";
+$query = "SELECT i_307676, i_306344/*AminSeq*/, i_306401/*ModelNumber*/, i_319165/*Blank A.. B..*/ FROM a_306280 LEFT JOIN a_304461 ON i_304516=i_307676 WHERE i_304874 BETWEEN 0.0001 AND 1 AND i_371162=1 AND i_306337='$aminoacid' GROUP BY i_307676, i_306401, i_306344, i_319165 ORDER BY i_307676";
+$sqlQuery  = $dbh->prepare($query);
+$sqlQuery->execute;
+while (@row= $sqlQuery->fetchrow_array()) {
+    print "----------------------------------------------\n\t\t@row[0] AminoSeq:@row[1] ModelNumber:@row[2] AminoABC:@row[3]\n";
+    $query2 = "SELECT id, i_306299, i_306307, i_306315, i_331770 /*atom label*/, i_306337 /*aminoacid*/, i_306344 /*amino sequence*/ FROM a_306280 WHERE i_307676='@row[0]' 
+                         AND i_306393=1 AND i_306344='@row[1]' AND i_306401='@row[2]' AND i_306337='$aminoacid' AND IFNULL(i_319165,'')='@row[3]'";
+    $sqlQuery2  = $dbh->prepare($query2);
+    $sqlQuery2->execute;
+    while ((@row2,@row3) = $sqlQuery2->fetchrow_array()) {	
+	print "\t@row2[0] @row2[1] @row2[2] @row2[3] @row2[4] @row2[5] @row2[6] @row2[7]\n";
+	$sqlQuery3 = $dbh->prepare($query2);
+	$sqlQuery3 -> execute;
+	while (@row3 = $sqlQuery3->fetchrow_array()) {
+	    if(@row2[0] == @row3[0]){next}
+	    if(@row2[4] eq ""){print "\n\n\n 0000000000000000000000000000000000 sem nada 00000000000000000000000000000000000000\n\n\n";next}
+	    if(@row3[4] eq ""){print "\n\n\n 0000000000000000000000000000000000 sem nada 00000000000000000000000000000000000000\n\n\n";next}	    
+	    $distance = sqrt((@row2[1]-@row3[1])**2+(@row2[2]-@row3[2])**2+(@row2[3]-@row3[3])**2);	    
+	    my $sth = $dbh->prepare('INSERT INTO m_373698 SET id=NULL');
+	    $sth->execute();
+	    $last_id = $dbh->{'mysql_insertid'};
+	    $sth = $dbh->prepare("INSERT INTO a_373702 SET id=$last_id, i_374587='@row[0]'/*PDBid*/, i_373706='@row2[5]'/*AminoFrom*/, i_373758='@row2[6]'/*AminoFromNumber*/, i_373723='@row2[4]'/*AtomFrom*/, i_373775='@row2[0]'/*AtomFromId*/,i_373712='@row3[5]'/*AminoAcidTo*/,i_373764='@row3[6]'/*AminoToNumber*/,i_373729='@row3[4]'/*AtomTo*/,i_373786=@row3[0]/*AtomToId*/,i_373735=$distance/*Distance*/");
+	    $sth->execute();	    
+	    print "\t\t @row2[0]/@row3[0] @row2[4] @row3[4] $distance\n";
+	}
+    }
+}

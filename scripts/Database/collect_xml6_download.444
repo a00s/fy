@@ -1,0 +1,41 @@
+#!/usr/bin/perl
+use XML::Simple;
+use Data::Dumper;
+use DBI;
+$my_db ="a00s_230";
+$my_user = "a00s_230";
+$my_pass = "bm";
+$my_host="127.0.0.1";
+
+$limit = @ARGV[0];
+$limit_to = @ARGV[1];
+chomp $limit;
+chomp $limit_to;
+
+if(length($limit) < 1){
+    print "./collect_xml.444 [number to import]\n";
+}
+$dbh = DBI->connect("DBI:mysql:$my_db:$my_host", $my_user, $my_pass, {AutoCommit => 0});
+
+$query = "SELECT pdbid FROM (SELECT LCASE(pdbid) pdbid FROM (SELECT i_305373 AS pdbid FROM a_305359 WHERE i_309616 IS NULL GROUP BY i_305373 HAVING count(*) = 1) AS tabtemp LEFT JOIN a_304461 ON i_304516=pdbid 
+   WHERE i_304882='SOLUTION NMR' AND i_304850<>'DNA') tabtemp2 LEFT JOIN a_306280 ON i_307676=pdbid WHERE a_306280.id IS NULL LIMIT $limit,$limit_to";
+$sqlQuery  = $dbh->prepare($query);
+$sqlQuery->execute;
+while (@row= $sqlQuery->fetchrow_array()) {
+    $contadortotal++;
+    $count_download++;
+    print "--------------------------- ".@row[0]." ------------ $contadortotal ---------------\n";
+    $already_downloaded = `ls -la files/@row[0]\.xml|grep -c ""`;
+    chomp $already_downloaded;
+    if($already_downloaded == 1){
+	print "Already downloaded\n";
+	next;
+    }
+    $pdbid = @row[0];
+    $directory =  @row[0];
+    $directory =~ s/^.//;
+    $directory =~ s/.$//;
+    
+    system("wget -O files/@row[0]\.xml.gz ftp://ftp.wwpdb.org/pub/pdb/data/structures/divided/XML/$directory/@row[0]\.xml.gz");
+    `gunzip -f files/@row[0]\.xml.gz`;
+}

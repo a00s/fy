@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+##########################################################################
+# Create min and max data for results of NMR of the same protein
+##########################################################################
+use DBI;
+$my_db ="a00s_230";
+$my_user = "a00s_230";
+$my_pass = "testando";
+$my_host="127.0.0.1";
+$pdbid = @ARGV[0];
+chomp $pdbid;
+if($pdbid eq ""){
+    print "Use \n./distances_min_max_same_amino_nmr.444 pdbid\n";
+    exit;
+}
+
+$dbh = DBI->connect("DBI:mysql:$my_db:$my_host", $my_user, $my_pass, {AutoCommit => 1});
+$query = "SELECT amino, MIN(distance), MAX(distance), label1, label2, count(*) FROM (SELECT atomo1.i_306323, atomo1.i_306337 amino, atomo1.i_306401, atomo1.i_331770 label1, atomo2.i_331770 label2, ROUND((SQRT(POW((atomo1.i_306299 - atomo2.i_306299),2) + POW((atomo1.i_306307 - atomo2.i_306307),2) + POW((atomo1.i_306315 - atomo2.i_306315),2))),2) AS distance FROM a_306280 atomo1 LEFT JOIN a_306280 atomo2 ON atomo2.i_307676=atomo1.i_307676 AND atomo1.i_306401=atomo2.i_306401 AND atomo1.i_306344=atomo2.i_306344 WHERE atomo1.i_307676='$pdbid' AND atomo1.i_306393=1/*ocupancy*/ AND atomo2.i_306393=1 AND atomo1.id<>atomo2.id AND atomo1.i_331770 IS NOT NULL AND atomo2.i_331770 IS NOT NULL) tabtemp GROUP BY amino, label1, label2";
+$sqlQuery  = $dbh->prepare($query);
+$sqlQuery->execute;
+while (@row= $sqlQuery->fetchrow_array()) {
+    print "@row[0] @row[1] @row[2] @row[3] @row[4]\n";
+     my $sth = $dbh->prepare('INSERT INTO m_380480 SET id=NULL');
+     $sth->execute();
+     $last_id = $dbh->{'mysql_insertid'};
+     $sth = $dbh->prepare("INSERT INTO a_380484 SET id=$last_id, i_380488='@row[0]'/*aminofrom*/, i_380494='@row[3]'/*atomfrom*/, i_380500='@row[0]'/*aminoto*/,i_380506='@row[4]'/*atomto*/,i_380512=1/*sameamino*/,i_380517='@row[1]'/*mindistance*/,i_380523='@row[2]'/*maxdistance*/,i_380529='@row[5]', i_393242='$pdbid'");
+     $sth->execute();	    
+}

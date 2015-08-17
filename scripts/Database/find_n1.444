@@ -1,0 +1,18 @@
+#!/usr/bin/perl
+use DBI;
+$my_db ="a00s_230";
+$my_user = "a00s_230";
+$my_pass = "testando";
+$my_host="127.0.0.1";
+
+$dbh = DBI->connect("DBI:mysql:$my_db:$my_host", $my_user, $my_pass, {AutoCommit => 0});
+$query = "SELECT firstid FROM (SELECT first.i_307676, first.i_306323, first.i_306344, first.id AS firstid, second.id AS secondid, first.i_306337, (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2))) AS distance FROM a_306280 AS first LEFT JOIN a_306280 AS second ON second.i_306408='O' AND first.i_307676=second.i_307676 AND first.i_306344=second.i_306344 AND first.i_306323=second.i_306323 WHERE first.i_306337 IN('Arg','Lys','Trp') AND first.i_306408='N' ORDER BY first.i_307676, first.i_306323, first.i_306344, (SQRT(POW((first.i_306299 - second.i_306299),2) + POW((first.i_306307 - second.i_306307),2) + POW((first.i_306315 - second.i_306315),2)))) AS tabtemp GROUP BY i_307676, i_306323, i_306344";
+$sqlQuery  = $dbh->prepare($query);
+$sqlQuery->execute;
+while (@row= $sqlQuery->fetchrow_array()) {
+    print "ID @row[0]\n";  
+    $final_set = "UPDATE a_306280 SET i_331770='N1' WHERE id=@row[0]";
+    my $sth = $dbh->prepare($final_set);
+    $sth->execute();
+}
+$dbh->commit;

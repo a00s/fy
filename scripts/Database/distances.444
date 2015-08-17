@@ -1,0 +1,45 @@
+#!/usr/bin/perl
+use XML::Simple;
+use Data::Dumper;
+use DBI;
+$my_db ="a00s_230";
+$my_user = "a00s_230";
+$my_pass = "bm";
+$my_host="127.0.0.1";
+
+$dbh = DBI->connect("DBI:mysql:$my_db:$my_host", $my_user, $my_pass, {AutoCommit => 0});
+$query = "SELECT i_307676 FROM a_306280 LEFT JOIN a_321607 ON i_307676=i_322321 WHERE i_322321 IS NULL GROUP BY i_307676 ORDER BY i_307676";
+$sqlQuery  = $dbh->prepare($query);
+$sqlQuery->execute;
+while (@row= $sqlQuery->fetchrow_array()) {
+    print @row[0]."\n";
+    $query = "
+SELECT oid, pdbid, model, sequence, MIN(distance), first, second, secondid FROM 
+  (
+      SELECT first_atom.id AS oid, first_atom.i_307676 AS pdbid, first_atom.i_306401 AS model, first_atom.i_306323 AS sequence, (SQRT(POW((first_atom.i_306299 - a_306280.i_306299),2) + POW((first_atom.i_306307 - a_306280.i_306307),2) + POW((first_atom.i_306315 - a_306280.i_306315),2))) AS distance, first_atom.i_306408 AS first, a_306280.i_306408 AS second, a_306280.id AS secondid FROM 
+      (SELECT id, i_306408, i_306299, i_306307, i_306315, i_307676, i_306401, i_306323 FROM a_306280 WHERE i_307676='@row[0]' AND i_306393 = 1) AS first_atom 
+      LEFT JOIN a_306280 ON a_306280.i_307676=first_atom.i_307676 AND a_306280.i_306401=first_atom.i_306401 AND a_306280.i_306323 = first_atom.i_306323 AND first_atom.id<>a_306280.id AND i_306393 = 1
+  ) AS tabdistances GROUP BY pdbid, model, sequence, first, second
+";
+    $sqlQuery2  = $dbh->prepare($query);
+    $sqlQuery2->execute;
+while (@row2= $sqlQuery2->fetchrow_array()) {
+    print "@row2[1] @row2[5] @row2[6] @row2[4]\n";
+    my $sth = $dbh->prepare(q{INSERT INTO m_321603 SET id=NULL});
+    $sth->execute();
+    $last_id = $dbh->{'mysql_insertid'};
+    $sth = $dbh->prepare('INSERT INTO a_321607 ( id, i_322321, i_322327, i_322333, i_322339, i_322345, i_322351, i_322357, i_322413) VALUES (?,?,?,?,?,?,?,?,?)');
+    $sth->execute(
+    	$last_id, # id
+     	@row2[1], # i_302321 PDB id
+     	@row2[3], # i_322327 Sequence
+     	@row2[0], # i_232333 Unique id
+     	@row2[5], # i_322339 Symbol
+     	@row2[7], # i_322345 Unique id nearest
+     	@row2[6], # i_322351 Symbol nearest
+     	@row2[4], # i_322357 Distance
+        @row2[2]  # i_322413 Model
+    );
+    $dbh->commit;
+}
+}

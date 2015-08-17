@@ -226,7 +226,7 @@ void distance_calibration() {
 		// -------- Same amino acid ---------
 //		SELECT * FROM (SELECT * FROM a_380484 WHERE i_380512 = 1 ORDER BY i_380529 DESC) tabtemp GROUP BY i_380488,i_380500,i_380494,i_380506
 //		pstmt = con->prepareStatement("SELECT i_380488 amino, i_380494 atom1, i_380506 atom2, i_380517 min_distance, i_380523 max_distance FROM a_380484 WHERE i_380529=? AND i_380512=1");
-		pstmt = con->prepareStatement("SELECT i_380488 amino, i_380494 atom1, i_380506 atom2, i_380517 min_distance, i_380523 max_distance FROM (SELECT * FROM a_380484 WHERE i_380512 = 1 ORDER BY i_380529 DESC) tabtemp GROUP BY i_380488,i_380500,i_380494,i_380506");
+		pstmt = con->prepareStatement("SELECT i_380488 amino, i_380494 atom1, i_380506 atom2, i_380517 min_distance, i_380523 max_distance FROM (SELECT * FROM a_380484 WHERE i_380512 = 1 AND i_393242/*pdbid*/ IS NULL ORDER BY i_380529 DESC) tabtemp GROUP BY i_380488,i_380500,i_380494,i_380506");
 //		pstmt->setInt(1, calibration_precision);
 		res = pstmt->executeQuery();
 		while (res->next()) {
@@ -235,7 +235,7 @@ void distance_calibration() {
 		}
 		// -------- Different amino acid ---------
 //		pstmt = con->prepareStatement("SELECT i_380488 aminofrom, i_380500 aminoto, i_380494 atom1, i_380506 atom2, i_380517 min_distance, i_380523 max_distance FROM a_380484 WHERE i_380529=? AND i_380512 IS NULL");
-		pstmt = con->prepareStatement("SELECT i_380488 aminofrom, i_380500 aminoto, i_380494 atom1, i_380506 atom2, i_380517 min_distance, i_380523 max_distance FROM (SELECT * FROM a_380484 WHERE i_380512 IS NULL ORDER BY i_380529 DESC) tabtemp GROUP BY i_380488,i_380500,i_380494,i_380506");
+		pstmt = con->prepareStatement("SELECT i_380488 aminofrom, i_380500 aminoto, i_380494 atom1, i_380506 atom2, i_380517 min_distance, i_380523 max_distance FROM (SELECT * FROM a_380484 WHERE i_380512 IS NULL AND i_393242/*pdbid*/ IS NULL ORDER BY i_380529 DESC) tabtemp GROUP BY i_380488,i_380500,i_380494,i_380506");
 //		pstmt->setInt(1, calibration_precision_out);
 		res = pstmt->executeQuery();
 		while (res->next()) {
@@ -245,6 +245,35 @@ void distance_calibration() {
 		delete pstmt;
 		delete con;
 		printf("System calibrated\n");
+	} catch (sql::SQLException &e) {
+		printf("%s", e.getErrorCode());
+	}
+}
+
+void distance_calibration_pdb(string PDBID) {
+	printf("Calibrando a partir de um pdb no mysql\n");
+	try {
+		sql::Driver *driver;
+		sql::Connection *con;
+		sql::PreparedStatement *pstmt;
+		sql::ResultSet *res;
+		driver = get_driver_instance();
+		con = driver->connect("tcp://127.0.0.1:3306", "a00s_230", "testando");
+		con->setSchema("a00s_230");
+		// [Amino1][Atom1][Same|Different][Amino2][Atom2]
+		// -------- Same amino acid ---------
+		pstmt = con->prepareStatement("SELECT i_380488 amino, i_380494 atom1, i_380506 atom2, i_380517 min_distance, i_380523 max_distance FROM a_380484 WHERE i_380512 = 1 AND i_393242/*pdbid*/ = ? ORDER BY i_380529 DESC");
+		pstmt->setString(1, PDBID);
+		res = pstmt->executeQuery();
+		while (res->next()) {
+//			printf("Recalibrando %s %s %s\n",res->getString("amino").c_str(),res->getString("atom1").c_str(),res->getString("atom2").c_str());
+			calibrationMin[get_amino_number(res->getString("amino").c_str())][get_atom_number(res->getString("atom1").c_str())][0][get_amino_number(res->getString("amino").c_str())][get_atom_number(res->getString("atom2").c_str())] = res->getDouble(4);
+			calibrationMax[get_amino_number(res->getString("amino").c_str())][get_atom_number(res->getString("atom1").c_str())][0][get_amino_number(res->getString("amino").c_str())][get_atom_number(res->getString("atom2").c_str())] = res->getDouble(5);
+		}
+		delete res;
+		delete pstmt;
+		delete con;
+		printf("System calibrated PDB\n");
 	} catch (sql::SQLException &e) {
 		printf("%s", e.getErrorCode());
 	}

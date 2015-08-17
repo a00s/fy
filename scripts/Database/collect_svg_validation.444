@@ -1,0 +1,79 @@
+#!/usr/bin/perl
+use XML::Simple;
+use Data::Dumper;
+use DBI;
+
+$my_db ="a00s_230";
+$my_user = "a00s_230";
+$my_pass = "testando";
+$my_host="127.0.0.1";
+
+$dbh = DBI->connect("DBI:mysql:$my_db:$my_host", $my_user, $my_pass, {AutoCommit => 1});
+$query = "SELECT LCASE(i_304516), id FROM a_304461 LEFT JOIN a_304071 using(id) WHERE i_304874 BETWEEN 0.1 AND 10 AND i_343950 IS NULL AND i_343185 IS NULL AND i_343192 IS NULL AND i_343199 IS NULL AND i_343206 IS NULL AND i_304516 ='3sdn'";
+$sqlQuery  = $dbh->prepare($query);
+$sqlQuery->execute;
+while (@row= $sqlQuery->fetchrow_array()) {
+    $contadortotal++;
+    $download_done = 0;
+    $count_download = 0;
+    while($download_done == 0){
+    	$count_download++;
+    	print "--------------------------- ".@row[0]." ------------ id: @row[1]  contador: $contadortotal ---------------\n";
+    	$pdbid = @row[0];
+    	$directory =  @row[0];
+    	$directory =~ s/^.//;
+    	$directory =~ s/.$//;
+    	`rm -f pdb_svg.gz`;
+    	`rm pdb_svg`;
+    	system("wget -q -O pdb_svg.gz ftp://ftp.wwpdb.org/pub/pdb/validation_reports/$directory/@row[0]/@row[0]\_multipercentile_validation.svg.gz");
+    	`gunzip -f pdb_svg.gz`;
+
+    	$check = `grep -i 'Better' pdb_svg`;
+    	chomp $check;
+    	if(length($check) == 0){ # For some reason the wget wont run some times, this will avoid adding a wrong sequence
+    	    print "\n!!!!!!!!!!!! Download error !!!!!!!!!!!!!\n";
+	    $download_done = 2;
+    	} else {
+    	     $download_done = 1;
+    	}
+    }
+    if($download_done == 2){next}
+
+    my $booklist = XMLin('pdb_svg');
+    @node_text = ();
+    @node_value = ();
+    for($i = 0; $i < length($booklist->{'text'}); $i++){
+      if($booklist->{'text'}[$i]->{'content'} eq "Metric"){last}
+      if($booklist->{'text'}[$i]->{'style'} =~ ":end"){
+	  push @node_text,$booklist->{'text'}[$i]->{'content'};
+      } elsif($booklist->{'text'}[$i]->{'style'} =~ ":start"){
+	  push @node_value,$booklist->{'text'}[$i]->{'content'};
+      }
+    }
+    $count = 0;
+    $sql_set = "";
+    foreach $line(@node_text){
+	@node_value[$count] =~ /^\d+(\.\d+)?/;
+	$number = $&;
+	print "$line = $number\n";
+	if($line eq "Rfree"){
+	    $sql_set .= ", i_343950='".$number."'";
+	} elsif($line eq "Clashscore"){
+	    $sql_set .= ", i_343185='".$number."'";
+	} elsif($line eq "Ramachandran outliers"){
+	    $sql_set .= ", i_343192='".$number."'";
+	} elsif($line eq "Sidechain outliers"){
+	    $sql_set .= ", i_343199='".$number."'";
+	} elsif($line eq "RSRZ outliers"){
+	    $sql_set .= ", i_343206='".$number."'";
+	} 
+	$count++;
+    }
+    $sql_set =~ s/^\,//;
+    if($sql_set ne ""){	
+	$sql_set = "INSERT INTO a_304071 SET id=@row[1], $sql_set ON DUPLICATE KEY UPDATE $sql_set";
+	$dbh->do($sql_set);
+    }
+}
+$rc = $sqlQuery->finish;
+print "\n";

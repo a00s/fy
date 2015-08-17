@@ -603,8 +603,8 @@ void load_protein(string PDBID) {
 
 			if (atomo_label == "N1" || atomo_label == "C1" || atomo_label == "C2") {
 				atomo_base[mapa_atomo[atomo_label]] = true;
-				velocidade_z[mapa_atomo["C1"]] = 0.02;
-				velocidade_x[mapa_atomo["N1"]] = 0.06;
+				velocidade_z[mapa_atomo["C1"]] = 0.04;
+				velocidade_x[mapa_atomo["N1"]] = 0.08;
 			}
 			if (atomo_label == "N1" && contador_amino > 0) {
 //				printf("Interligando com o ultimo atomo %d\n",chain_ultimo_atomo);

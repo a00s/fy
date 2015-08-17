@@ -1,0 +1,22 @@
+#!/bin/bash
+./distances_min_max_same_amino.444 20
+./distances_min_max_same_amino.444 21
+./distances_min_max_same_amino.444 22
+./distances_min_max_same_amino.444 23
+./distances_min_max_same_amino.444 24
+./distances_min_max_same_amino.444 25
+./distances_min_max_same_amino.444 26
+./distances_min_max_same_amino.444 27
+./distances_min_max_same_amino.444 28
+./distances_min_max_same_amino.444 29
+./distances_min_max_same_amino.444 30
+./distances_min_max_same_amino.444 31
+./distances_min_max_same_amino.444 32
+./distances_min_max_same_amino.444 33
+./distances_min_max_same_amino.444 34
+./distances_min_max_same_amino.444 35
+./distances_min_max_same_amino.444 36
+./distances_min_max_same_amino.444 37
+./distances_min_max_same_amino.444 38
+./distances_min_max_same_amino.444 39
+./distances_min_max_same_amino.444 40

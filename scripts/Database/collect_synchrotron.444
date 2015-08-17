@@ -1,0 +1,56 @@
+#!/usr/bin/perl
+use XML::Simple;
+use Data::Dumper;
+use DBI;
+$my_db ="a00s_230";
+$my_user = "a00s_230";
+$my_pass = "testando";
+$my_host="127.0.0.1";
+
+$dbh = DBI->connect("DBI:mysql:$my_db:$my_host", $my_user, $my_pass, {AutoCommit => 1});
+$query = "SELECT LCASE(i_304516), id FROM a_304461 WHERE i_304874 BETWEEN 2.8001 AND 2.9 AND i_371162 IS NULL AND i_304516 NOT IN('4hen','1bgl','1bgm')";
+$sqlQuery  = $dbh->prepare($query);
+$sqlQuery->execute;
+while (@row= $sqlQuery->fetchrow_array()) {
+    $contadortotal++;
+    $download_done = 0;
+    $count_download = 0;
+#    @row[0] = "1bj0";
+    while($download_done == 0){
+    	$count_download++;
+    	print "--------------------------- ".@row[0]." ------------ $contadortotal ---------------\n";
+    	$pdbid = @row[0];
+    	$directory =  @row[0];
+    	$directory =~ s/^.//;
+    	$directory =~ s/.$//;
+    	`rm pdb_xml.gz`;
+    	`rm pdb_xml`;
+    	system("wget -O pdb_xml.gz ftp://ftp.wwpdb.org/pub/pdb/data/structures/divided/XML/$directory/@row[0]\.xml.gz");
+    	`gunzip -f pdb_xml.gz`;
+    	$check = `grep -i 'datablockName="@row[0]"' pdb_xml`;
+    	chomp $check;
+    	if(length($check) == 0){ # For some reason the wget wont run some times, this will avoid adding a wrong sequence
+    	    print "\n!!!!!!!!!!!! Download error !!!!!!!!!!!!!\n";
+    	    if($count_download == 5){
+		$download_done = 1;
+		last;
+    	    }
+    	    sleep(30);
+    	} else {
+    	    $download_done = 1;
+    	}
+    }
+    $check = `grep -i '<PDBx:source>SYNCHROTRON</PDBx:source>' pdb_xml`;
+    chomp $check;
+    if(length($check) == 0){
+	print "\n @row[0] Nao tem synchroton!\n";
+	`echo @row[0] >> synchrotron_sem`;
+	# exit;
+    } else {
+	print "@row[0] SYNCHROTRON\n";
+	$sth = $dbh->prepare(q{UPDATE a_304461 SET i_371162=1 WHERE id=?});
+	$sth->execute(@row[1]);
+    }
+}
+$rc = $sqlQuery->finish;
+print "\n";
