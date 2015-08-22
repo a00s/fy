@@ -198,6 +198,8 @@ void conecta_eletrons(string procura_amino) {
 		connect_electron("H4", "C3");
 		connect_electron("H5", "C4");
 		connect_electron("H6", "C4");
+		connect_electron("O2", "C5");
+		connect_electron("O3", "C5");
 	} else if (procura_amino == "ALA") {
 		connect_electron("C1", "C3");
 		connect_electron("H1", "N1");

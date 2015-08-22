@@ -1,8 +1,8 @@
 #include <iostream>
 
 #include <GL/GLee.h>         // No need to link to GL/gl.h
-//#include <GL/glfw.h>      // Include OpenGL Framework library
-#include <GLFW/glfw3.h>
+#include <GL/glfw.h>      // Include OpenGL Framework library
+//#include <GLFW/glfw3.h>
 #include <GL/freeglut.h>  // Include FreeGLUT so we can easily draw spheres and calculate our viewing frustrum
 #include <math.h>         // Used only for sin() and cos() functions
 #include <cstdio>
@@ -49,8 +49,8 @@ GLfloat lightPos[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 //GLfloat lightPos[] = { 0.0f, 0.0f, 300.0f, 1.0f };
 
 // How fast we move (higher values mean we move and strafe faster)
-//GLfloat movementSpeedFactor = 0.2f;
-GLfloat movementSpeedFactor = 1.0f;
+GLfloat movementSpeedFactor = 0.8f;
+//GLfloat movementSpeedFactor = 1.0f;
 int atomos_quantidade = 0;
 GLfloat caixa_tamanho = 2000;
 int cont_loop_electron = 0;
@@ -62,6 +62,7 @@ int cont_loop_electron_time = 1;
 //GLfloat collision_proximityE_HB_tensao = 0.4;
 //GLfloat collision_angleE_HB = 1.5;
 GLfloat max_distance_hydrogen_bond = 4.5;
+GLfloat max_distance_disulfide_bond = 2.8;
 
 GLint forca_externa_contador_max = 4;
 //GLint forca_externa_contador_max = 23;
@@ -69,12 +70,14 @@ GLint forca_externa_contador_max_t = 10;
 //GLint forca_externa_contador_max_t = 0;
 //GLint forca_externa_contador_max_t = 8;
 GLint forca_externa_contador_max_hb = 99999999;
+GLint forca_externa_contador_max_db = 1;
 GLint calibration_precision = 10;
 GLint calibration_precision_out = 10;
 GLint calibration_minimal_distance = 4;
 GLint contador_restart = 0;
 GLint contador_restart_max_error = 600;
 GLint contador_restart_life = 0;
+GLint atomo_selecionado = -1;
 
 //GLint calibration_minimal_distance = 2;
 
@@ -174,12 +177,18 @@ bool show_base = false;
 bool rastreio = false;
 bool paused = false;
 bool show_colisao_tensao = true;
-bool show_tensao_hb = false;
+bool show_tensao_hb = true;
 bool show_comparation = true;
+bool show_comparation_speed = false;
 
 GLint forca_externa_contador = 0;
 GLint forca_externa_contador_t = 0;
 GLint forca_externa_contador_hb = 0;
+GLint forca_externa_contador_db = 0; // Dissulfite bond
+
+// ----------------- teste sphera ----------------------
+GLdouble testesphera[50][3];
+GLint testesphera_contador = 0;
 
 //GLfloat C_nucleo_proximity = 1.7;
 //GLfloat C_nucleo_proximity_free = 1.7; // Van der waals angstron
@@ -435,17 +444,17 @@ void initGL() {
 
 // -----------------
 
-//	paused = true;
-//
-//	for (GLint i = 0; i < atomos_quantidade; i++) {
-//		velocidade_x_backup[i] = velocidade_x[i];
-//		velocidade_y_backup[i] = velocidade_y[i];
-//		velocidade_z_backup[i] = velocidade_z[i];
-//		velocidade_x[i] = 0.0;
-//		velocidade_y[i] = 0.0;
-//		velocidade_z[i] = 0.0;
-//		cont_loop_electron_time = 999999999;
-//	}
+	paused = true;
+
+	for (GLint i = 0; i < atomos_quantidade; i++) {
+		velocidade_x_backup[i] = velocidade_x[i];
+		velocidade_y_backup[i] = velocidade_y[i];
+		velocidade_z_backup[i] = velocidade_z[i];
+		velocidade_x[i] = 0.0;
+		velocidade_y[i] = 0.0;
+		velocidade_z[i] = 0.0;
+		cont_loop_electron_time = 999999999;
+	}
 //	load_protein("8RXN");
 // ---------------------
 //	read_pdb_amino("TRP");
@@ -475,9 +484,8 @@ void moveCamera() {
 
 // Function to deal with mouse position changes, called whenever the mouse cursorm moves
 void handleMouseMove(int mouseX, int mouseY) {
-	printf("Evento mouse\n");
-	GLfloat vertMouseSensitivity = 10.0f;
-	GLfloat horizMouseSensitivity = 10.0f;
+	GLfloat vertMouseSensitivity = 20.0f;
+	GLfloat horizMouseSensitivity = 20.0f;
 
 //cout << "Mouse cursor is at position (" << mouseX << ", " << mouseY << endl;
 
@@ -689,6 +697,14 @@ void ativa_desativa_comparation() {
 		show_comparation = false;
 	} else {
 		show_comparation = true;
+	}
+}
+
+void ativa_desativa_comparation_speed() {
+	if (show_comparation_speed) {
+		show_comparation_speed = false;
+	} else {
+		show_comparation_speed = true;
 	}
 }
 
@@ -1016,6 +1032,10 @@ void handleKeypress(int theKey, int theAction) {
 
 			case '5':
 				restaura_posicoes();
+				break;
+
+			case '6':
+				ativa_desativa_comparation_speed();
 				break;
 
 			case '.':
@@ -1362,6 +1382,21 @@ void collision3D(GLint i, GLint ii, string tipo) {
 			glVertex3f(posx[ii], posy[ii], posz[ii]);
 			glEnd();
 		}
+	} else if (tipo == "tensaoDB") {
+		//		printf("Tensao HB\n");
+		x1 = posx[i] - (2 * (posx[i] - posx[ii]));
+		y1 = posy[i] - (2 * (posy[i] - posy[ii]));
+		z1 = posz[i] - (2 * (posz[i] - posz[ii]));
+		r1 = show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]) / 2;
+		r2 = r1;
+
+		if (show_tensao_hb) {
+			glColor3ub(255, 128, 0);
+			glBegin(GL_LINES);
+			glVertex3f(posx[i], posy[i], posz[i]);
+			glVertex3f(posx[ii], posy[ii], posz[ii]);
+			glEnd();
+		}
 	} else if (tipo == "electron_nucleo") {
 //		printf("Colisao\n");
 		r1 = show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]) - r2;
@@ -1571,8 +1606,21 @@ void drawScene() {
 	glTranslatef(-camXPos, -camYPos, -camZPos); // Translate the modelviewm matrix to the position of our camera
 // Move everything "into" the screen (i.e. move 300 units along the Z-axis into the screen) so that all positions are now relative to the location of the sun
 	glTranslatef(0.0f, 0.0f, sunZLocation);
+
 	glColor3ub(255, 255, 0);
-	glutWireCube(2.0 * caixa_tamanho);
+	// ------------ Desenhando cubo
+//	glutWireCube(2.0 * caixa_tamanho);
+
+	// Testando sphera
+//	for (GLint ii = 0; ii < testesphera_contador; ii++) {
+//		glColor3ub(255, 255, 0);
+//		glTranslatef(testesphera[ii][0], testesphera[ii][1], testesphera[ii][2]);
+//		glutSolidSphere(0.1, 6, 6);
+//		glTranslatef(-testesphera[ii][0], -testesphera[ii][1], -testesphera[ii][2]);
+//	}
+
+	// --------------------------
+
 // Aidicionando ribosome
 //	add_pdb();
 
@@ -1638,6 +1686,10 @@ void drawScene() {
 				if (amino_sequencial[i] != amino_sequencial[ii]) {
 					same_amino = 1;
 				}
+				if(calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]] == 0.0){
+					printf("Nao existe valor para %d %s %d %s\n", amino[i], atomo_letraL[i].c_str(), amino[ii], atomo_letraL[ii].c_str());
+//					printf("Nao existe valor para %s\n", amino[i]);
+				}
 				// Comentado pra resolve o problema de atomos se alinhando
 				if (electron_arested[i][0][0] == ii || electron_arested[i][1][0] == ii || electron_arested[i][2][0] == ii || electron_arested[i][3][0] == ii) {
 					if (show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]) <= calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]]) {
@@ -1670,6 +1722,14 @@ void drawScene() {
 					if (show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]) >= calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]] + 0.04) {
 						collision3D(i, ii, "tensao");
 					}
+//				} else if (atomo_letra[i] == 'S' && atomo_letra[ii] == 'S' && forca_externa_contador_db == forca_externa_contador_max_db && calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]] < max_distance_disulfide_bond) {
+				} else if (atomo_letra[i] == 'S' && atomo_letra[ii] == 'S' && forca_externa_contador_db == forca_externa_contador_max_db && show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]) < max_distance_disulfide_bond) {
+//					printf("Possivel DB %s %s  CalMin %f \n",atomo_letra[i], atomo_letra[ii], calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]]);
+//					same_amino = 1;
+					if (show_distance(posx[i], posx[ii], posy[i], posy[ii], posz[i], posz[ii]) >= calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]]) {
+//						printf("CMDB %f %d %d\n",calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]],atomo_letraN[i],atomo_letraN[ii]);
+						collision3D(i, ii, "tensaoDB");
+					}
 				} else if (forca_externa_contador_hb == forca_externa_contador_max_hb && amino_sequencial[i] != amino_sequencial[ii] && calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]] < max_distance_hydrogen_bond && ((atomo_letraN[i] == 11 && atomo_letraN[ii] == 15) || (atomo_letraN[i] == 15 && atomo_letraN[ii] == 11))) {
 					// Hrydrogen bonds
 					same_amino = 1;
@@ -1699,8 +1759,15 @@ void drawScene() {
 				temp = temp * 7;
 			}
 			unsigned char r, g, b;
-			hsvtorgb(&r, &g, &b, 120 + temp, 255, 255);
+			hsvtorgb(&r, &g, &b, 120 - temp, 255, 255);
 			glColor3ub(r, g, b);
+		} else if (show_comparation_speed) {
+//			int temp = fabs((velocidade_x_backup[i]) + fabs(velocidade_y_backup[i]) + fabs(velocidade_z_backup[i])) * 3000;
+			int temp = fabs((velocidade_x[i]) + fabs(velocidade_y[i]) + fabs(velocidade_z[i])) * 3000;
+			unsigned char r, g, b;
+			hsvtorgb(&r, &g, &b, 120 - temp, 255, 255);
+			glColor3ub(r, g, b);
+
 		} else {
 			if (atomo_letra[i] == 'C') {
 				glColor3ub(126, 152, 150);
@@ -1716,7 +1783,9 @@ void drawScene() {
 				glColor3ub(200, 67, 55);
 			}
 		}
-
+		if (atomo_selecionado == i) {
+			glColor3ub(255, 255, 255);
+		}
 		glTranslatef(posx[i], posy[i], posz[i]);
 		if (show_base_line == false) {
 			if (show_base == false || (show_base == true && atomo_base[i] == true)) {
@@ -1876,6 +1945,7 @@ void drawScene() {
 	forca_externa_contador++;
 	forca_externa_contador_t++;
 	forca_externa_contador_hb++;
+	forca_externa_contador_db++;
 	if (forca_externa_contador > forca_externa_contador_max) {
 		forca_externa_contador = 0;
 	}
@@ -1885,7 +1955,9 @@ void drawScene() {
 	if (forca_externa_contador_hb > forca_externa_contador_max_hb) {
 		forca_externa_contador_hb = 0;
 	}
-
+	if (forca_externa_contador_db > forca_externa_contador_max_db) {
+		forca_externa_contador_db = 0;
+	}
 // -----------------------------------------------------------
 	contadorFrames++;
 	double currentTime = glfwGetTime();
@@ -1921,11 +1993,41 @@ void drawScene() {
 	glfwSwapBuffers();				// Swap the buffers to display the scene (so we don't have to watch it being drawn!)
 }
 
-//void mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
-void mouse_button_callback(GLFWwindow window, int button, int action, int mods){
-	printf("MBC\n");
-//    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-//        popup_menu();
+static void mouse_button_callback(int key, int action) {
+//	printf("Evento mouse %d %d\n", key, action);
+	if (key == 0 && action == 0) {
+		GLint viewport[4];
+		glGetIntegerv(GL_VIEWPORT, viewport);
+		GLdouble objX;
+		GLdouble objY;
+		GLdouble objZ;
+		GLdouble objXf;
+		GLdouble objYf;
+		GLdouble objZf;
+		GLdouble modelview[16];
+		glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+		GLdouble projection[16];
+		glGetDoublev(GL_PROJECTION_MATRIX, projection);
+		gluUnProject(viewport[2] / 2, viewport[3] - viewport[3] / 2, 0, modelview, projection, viewport, &objX, &objY, &objZ);
+		gluUnProject(viewport[2] / 2, viewport[3] - viewport[3] / 2, 1, modelview, projection, viewport, &objXf, &objYf, &objZf);
+		GLint encontrado_i = -1;
+		GLdouble encontrado_d = 100;
+		GLdouble res_calculo = 0;
+		for (GLint i = 0; i < atomos_quantidade; i++) {
+			res_calculo = fabs(show_distance(objX, objXf, objY, objYf, objZ, objZf) - show_distance(posx[i], objX, posy[i], objY, posz[i], objZ) - show_distance(posx[i], objXf, posy[i], objYf, posz[i], objZf));
+			if (res_calculo < encontrado_d) {
+				encontrado_d = res_calculo;
+				encontrado_i = i;
+			}
+		}
+		if (encontrado_d <= 0.003) {
+			atomo_selecionado = encontrado_i;
+		} else {
+			atomo_selecionado = -1;
+		}
+		printf("Atomo selecionado: %d\n", encontrado_i);
+		printf("%s A:%d V(%f %f %f)(%f %f %f)\n", atomo_letraL[encontrado_i].c_str(), amino_sequencial[encontrado_i], velocidade_x[encontrado_i], velocidade_y[encontrado_i], velocidade_z[encontrado_i], velocidade_x_backup[encontrado_i], velocidade_y_backup[encontrado_i], velocidade_z_backup[encontrado_i]);
+	}
 }
 
 // Fire it up...
@@ -1998,7 +2100,7 @@ int main(int argc, char **argv) {
 
 // Specify the function which should execute when the mouse is moved
 	glfwSetMousePosCallback(handleMouseMove);
-//	glfwSetMouseButtonCallback(window, mouse_button_callback);
+	glfwSetMouseButtonCallback(mouse_button_callback);
 
 	while (running == true) {
 		calculaposicoes();
