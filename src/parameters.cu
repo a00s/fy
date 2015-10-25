@@ -18,7 +18,7 @@ int contadorll = 0;
 //extern bool mousefree;
 extern GLint windowWidth;
 extern GLint windowHeight;
-///extern string fps;
+//extern string fps;
 //map<int, map<string, map<string, GLfloat> > > atom_statistic;
 map<string, string> tw;
 
