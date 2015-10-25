@@ -7,30 +7,36 @@ CU_SRCS += \
 ../src/aminos.cu \
 ../src/aula1.cu \
 ../src/learn.cu \
+../src/parameters.cu \
 ../src/pdb.cu \
-../src/util.cu 
-
-CU_DEPS += \
-./src/aminos.d \
-./src/aula1.d \
-./src/learn.d \
-./src/pdb.d \
-./src/util.d 
+../src/util.cu \
+../src/vglobals.cu 
 
 OBJS += \
 ./src/aminos.o \
 ./src/aula1.o \
 ./src/learn.o \
+./src/parameters.o \
 ./src/pdb.o \
-./src/util.o 
+./src/util.o \
+./src/vglobals.o 
+
+CU_DEPS += \
+./src/aminos.d \
+./src/aula1.d \
+./src/learn.d \
+./src/parameters.d \
+./src/pdb.d \
+./src/util.d \
+./src/vglobals.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
 src/%.o: ../src/%.cu
 	@echo 'Building file: $<'
 	@echo 'Invoking: NVCC Compiler'
-	/usr/local/cuda-6.5/bin/nvcc -Imysqlcppconn -G -g -O0 -gencode arch=compute_30,code=sm_30  -odir "src" -M -o "$(@:%.o=%.d)" "$<"
-	/usr/local/cuda-6.5/bin/nvcc -Imysqlcppconn -G -g -O0 --compile --relocatable-device-code=false -gencode arch=compute_30,code=compute_30 -gencode arch=compute_30,code=sm_30  -x cu -o  "$@" "$<"
+	/usr/local/cuda-7.5/bin/nvcc -Imysqlcppconn -G -g -O0 -v -gencode arch=compute_30,code=sm_30  -odir "src" -M -o "$(@:%.o=%.d)" "$<"
+	/usr/local/cuda-7.5/bin/nvcc -Imysqlcppconn -G -g -O0 -v --compile --relocatable-device-code=false -gencode arch=compute_30,code=compute_30 -gencode arch=compute_30,code=sm_30  -x cu -o  "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

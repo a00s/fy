@@ -16,7 +16,7 @@ using namespace std;
 
 const float TO_RADS = 3.141592654f / 180.0f; // The value of 1 degree in radians
 
-GLint windowWidth = 1920;                    // Width of our window
+GLint windowWidth = 1500;                    // Width of our window
 GLint windowHeight = 768;                    // Heightof our window
 
 GLint midWindowX = windowWidth / 2;         // Middle of the window horizontally
@@ -153,6 +153,8 @@ string fps = "";
 int contadorFrames = 0;
 GLfloat pH = 7.0;
 
+bool mousefree = false;
+
 // Hoding any keys down?
 bool holdingForward = false;
 bool holdingBackward = false;
@@ -236,6 +238,10 @@ void distance_calibration_pdb(string PDBID);
 int get_amino_number(const char *amino_sigla);
 int get_atom_number(const char *atomo_letra_local);
 void hsvtorgb(unsigned char *r, unsigned char *g, unsigned char *b, unsigned char h, unsigned char s, unsigned char v);
+
+//parameters.cu
+void parameters_window();
+void handleKeypress(int theKey, int theAction);
 
 //learn.cu
 void change_properties();
@@ -353,21 +359,13 @@ void initGL() {
 
 	// ----- OpenGL settings -----
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Set out clear colour to black, full alpha
-
 	glfwSwapInterval(1); // Lock to vertical sync of monitor (normally 60Hz, so 60fps)
-
 	glShadeModel(GL_SMOOTH);    // Enable (gouraud) shading
-
 	glEnable(GL_DEPTH_TEST);    // Enable depth testing
-
 	glClearDepth(1.0f);         // Clear the entire depth of the depth buffer
-
 	glDepthFunc(GL_LEQUAL);	// Set our depth function to overwrite if new value less than or equal to current value
-
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); // Ask for nicest perspective correction
-
 	glEnable(GL_CULL_FACE); // Do not draw polygons facing away from us
-
 	glLineWidth(2.0f);			// Set a 'chunky' line width
 
 	// ---- Set up OpenGL lighting -----
@@ -419,10 +417,10 @@ void initGL() {
 	last_y = 0 - 10.0;
 	srand((unsigned) time(0));
 
-	distance_calibration();
-	distance_calibration_pdb("1wqc");
+//	distance_calibration();
+//	distance_calibration_pdb("1wqc");
 	load_protein("1wqc");
-	load_protein_models("1wqc");
+//	load_protein_models("1wqc");
 
 //	posx_backup = posx;
 	memcpy(posx_backup, posx, sizeof(posx));
@@ -484,6 +482,9 @@ void moveCamera() {
 
 // Function to deal with mouse position changes, called whenever the mouse cursorm moves
 void handleMouseMove(int mouseX, int mouseY) {
+	if (mousefree == true) {
+		return;
+	}
 	GLfloat vertMouseSensitivity = 20.0f;
 	GLfloat horizMouseSensitivity = 20.0f;
 
@@ -993,7 +994,7 @@ void add_chain() {
 //	add_glu(false, true);
 }
 // Function to set flags according to which keys are pressed or released
-void handleKeypress(int theKey, int theAction) {
+void handleKeypress2(int theKey, int theAction) {
 // If a key is pressed, toggle the relevant key-press flag
 	if (theAction == GLFW_PRESS) {
 		if (pressionando_control) {
@@ -1686,8 +1687,8 @@ void drawScene() {
 				if (amino_sequencial[i] != amino_sequencial[ii]) {
 					same_amino = 1;
 				}
-				if(calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]] == 0.0){
-					printf("Nao existe valor para %d %s %d %s\n", amino[i], atomo_letraL[i].c_str(), amino[ii], atomo_letraL[ii].c_str());
+				if (calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]] == 0.0) {
+//					printf("Nao existe valor para %d %s %d %s\n", amino[i], atomo_letraL[i].c_str(), amino[ii], atomo_letraL[ii].c_str());
 //					printf("Nao existe valor para %s\n", amino[i]);
 				}
 				// Comentado pra resolve o problema de atomos se alinhando
@@ -1970,25 +1971,28 @@ void drawScene() {
 	}
 
 // Imprime texto na tela
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	gluOrtho2D(0.0, windowWidth, 0.0, windowHeight);
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
-	glColor3f(0.0, 1.0, 0.0);				// Green
-	glRasterPos2i(10, 10);
-	void * font = GLUT_BITMAP_9_BY_15;
-	for (string::iterator i = fps.begin(); i != fps.end(); ++i) {
-		char c = *i;
-		glutBitmapCharacter(font, c);
-	}
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
-
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
+	parameters_window();
+//	glMatrixMode(GL_PROJECTION);
+//	glPushMatrix();
+//	glLoadIdentity();
+//	gluOrtho2D(0.0, windowWidth, 0.0, windowHeight);
+//	glMatrixMode(GL_MODELVIEW);
+//	glPushMatrix();
+//	glLoadIdentity();
+//	glColor3f(0.0, 1.0, 0.0);				// Green
+//	glRasterPos2i(10, 10);
+//	void * font = GLUT_BITMAP_9_BY_15;
+//	for (string::iterator i = fps.begin(); i != fps.end(); ++i) {
+//		char c = *i;
+//		glutBitmapCharacter(font, c);
+//	}
+//	glMatrixMode(GL_MODELVIEW);
+//	glPopMatrix();
+//
+//	glMatrixMode(GL_PROJECTION);
+//	glPopMatrix();
+//
+//	parameters_window();
 // ----- Stop Drawing Stuff! ------
 	glfwSwapBuffers();				// Swap the buffers to display the scene (so we don't have to watch it being drawn!)
 }
@@ -2065,29 +2069,29 @@ int main(int argc, char **argv) {
 
 // Initialise GLee once we've got a rendering context
 // Note: We don't really have to do this because it's called automatically, but if we do it - we KNOW it's been called!
-	GLeeInit();
-
-// Check for the OpenGL extension which allows us to use vsync
-	if (GLEE_GLX_SGI_swap_control) {
-		cout << "Extension found: GLX_SGI_swap_control (vsync can be used)." << endl;
-		glfwSwapInterval(1);
-	} else {
-		cout << "Extension NOT found: GLX_SGI_swap_control (vsync cannot be used)." << endl;
-		glfwSwapInterval(0);
-	}
-
-// Check for the OpenGL extension which allows us to use antialiasing
-	if (GLEE_ARB_multitexture) {
-		cout << "Extension found: GLX_ARB_multitexture (anti-aliasing can be used)." << endl;
-
-// If the extension's available, we likely got anti-aliasing, so disable line smoothing as it comes free with the AA
-		glDisable(GL_LINE_SMOOTH);
-	} else {
-		cout << "Extension NOT found: GLX_ARB_multitexture (anti-aliasing cannot be used)." << endl;
-
-// If the extention's not available, turn on line smoothing
-		glEnable(GL_LINE_SMOOTH);
-	}
+//	GLeeInit();
+//
+//// Check for the OpenGL extension which allows us to use vsync
+//	if (GLEE_GLX_SGI_swap_control) {
+//		cout << "Extension found: GLX_SGI_swap_control (vsync can be used)." << endl;
+//		glfwSwapInterval(1);
+//	} else {
+//		cout << "Extension NOT found: GLX_SGI_swap_control (vsync cannot be used)." << endl;
+//		glfwSwapInterval(0);
+//	}
+//
+//// Check for the OpenGL extension which allows us to use antialiasing
+//	if (GLEE_ARB_multitexture) {
+//		cout << "Extension found: GLX_ARB_multitexture (anti-aliasing can be used)." << endl;
+//
+//// If the extension's available, we likely got anti-aliasing, so disable line smoothing as it comes free with the AA
+//		glDisable(GL_LINE_SMOOTH);
+//	} else {
+//		cout << "Extension NOT found: GLX_ARB_multitexture (anti-aliasing cannot be used)." << endl;
+//
+//// If the extention's not available, turn on line smoothing
+//		glEnable(GL_LINE_SMOOTH);
+//	}
 
 // Set the mouse cursor to the centre of our window
 	glfwSetMousePos(midWindowX, midWindowY);

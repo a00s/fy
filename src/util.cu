@@ -246,7 +246,7 @@ void distance_calibration() {
 		delete con;
 		printf("System calibrated\n");
 	} catch (sql::SQLException &e) {
-		printf("%s", e.getErrorCode());
+		printf("Error %d\n", e.getErrorCode());
 	}
 }
 
