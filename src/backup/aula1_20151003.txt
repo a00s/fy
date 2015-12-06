@@ -10,21 +10,13 @@
 #include <string>
 #include <sstream>
 #include <map>
-#include "gvariaveis.h"
 //#include <unordered_map>
 
 using namespace std;
-// Variaveis de tela
-map<string, GLfloat> vs;
-// Variaveis propriedades
-map<string, map<string, map<string, map<string, map<string, map<string, GLfloat> > > > > > vp;
-map<string, map<string, GLfloat*> > vF;
-map<string, map<string, GLint*> > vI;
-map<string, map<string, bool*> > vB;
 
 const float TO_RADS = 3.141592654f / 180.0f; // The value of 1 degree in radians
 
-GLint windowWidth = 1500;                    // Width of our window
+GLint windowWidth = 1920;                    // Width of our window
 GLint windowHeight = 768;                    // Heightof our window
 
 GLint midWindowX = windowWidth / 2;         // Middle of the window horizontally
@@ -33,6 +25,21 @@ GLint midWindowY = windowHeight / 2;         // Middle of the window vertically
 GLfloat fieldOfView = 25.0f; // Define our field of view (i.e. how quickly foreshortening occurs)
 GLfloat near = 1.0f; // The near (Z Axis) point of our viewing frustrum (default 1.0f)
 GLfloat far = 1500.0f; // The far  (Z Axis) point of our viewing frustrum (default 1500.0f)
+
+// Camera rotation
+GLfloat camXRot = 0.0f;
+GLfloat camYRot = 0.0f;
+GLfloat camZRot = 0.0f;
+
+// Camera position
+GLfloat camXPos = 0.0f;
+GLfloat camYPos = 0.0f;
+GLfloat camZPos = 0.0f;
+
+// Camera movement speed
+GLfloat camXSpeed = 0.0f;
+GLfloat camYSpeed = 0.0f;
+GLfloat camZSpeed = 0.0f;
 
 GLint frameCount = 0; // How many frames have we drawn?
 // Location of the sun (i.e. how far deep into the screen is it?)
@@ -49,10 +56,19 @@ GLfloat caixa_tamanho = 2000;
 int cont_loop_electron = 0;
 int cont_loop_electron_time = 1;
 
+//GLfloat collision_proximityE = 0.4;
+//GLfloat collision_angleE = 0.5;
+//GLfloat collision_proximityE_HB = 1.4;
+//GLfloat collision_proximityE_HB_tensao = 0.4;
+//GLfloat collision_angleE_HB = 1.5;
 GLfloat max_distance_hydrogen_bond = 4.5;
 GLfloat max_distance_disulfide_bond = 2.8;
+
 GLint forca_externa_contador_max = 4;
+//GLint forca_externa_contador_max = 23;
 GLint forca_externa_contador_max_t = 10;
+//GLint forca_externa_contador_max_t = 0;
+//GLint forca_externa_contador_max_t = 8;
 GLint forca_externa_contador_max_hb = 99999999;
 GLint forca_externa_contador_max_db = 1;
 GLint calibration_precision = 10;
@@ -63,23 +79,10 @@ GLint contador_restart_max_error = 600;
 GLint contador_restart_life = 0;
 GLint atomo_selecionado = -1;
 
+//GLint calibration_minimal_distance = 2;
+
 GLfloat last_x;
 GLfloat last_y;
-
-// Camera rotation
-GLfloat camXRot = 0.0f;
-GLfloat camYRot = 0.0f;
-GLfloat camZRot = 0.0f;
-
-// Camera position
-GLfloat camXPos = 0.0f;
-GLfloat camYPos = 0.0f;
-GLfloat camZPos = 0.0f;
-
-// Camera movement speed
-GLfloat camXSpeed = 0.0f;
-GLfloat camYSpeed = 0.0f;
-GLfloat camZSpeed = 0.0f;
 
 // Atomo 1
 GLfloat posx[1000];
@@ -150,8 +153,6 @@ string fps = "";
 int contadorFrames = 0;
 GLfloat pH = 7.0;
 
-bool mousefree = false;
-
 // Hoding any keys down?
 bool holdingForward = false;
 bool holdingBackward = false;
@@ -161,12 +162,12 @@ bool pressionando_k = false;
 bool pressionando_j = false;
 bool pressionando_i = false;
 bool pressionando_m = false;
-//bool pressionando_o = false;
-//bool pressionando_p = false;
-//bool pressionando_0 = false;
-//bool pressionando_l = false;
-//bool pressionando_8 = false;
-//bool pressionando_9 = false;
+bool pressionando_o = false;
+bool pressionando_p = false;
+bool pressionando_0 = false;
+bool pressionando_l = false;
+bool pressionando_8 = false;
+bool pressionando_9 = false;
 bool pressionando_control = false;
 
 bool show_power_sphere = false;
@@ -211,7 +212,6 @@ GLint testesphera_contador = 0;
 
 GLint contador_sleep = 0;
 map<int, map<string, map<string, GLfloat> > > atom_statistic;
-
 // --------- External functions -------------
 
 // pdb.cu
@@ -237,30 +237,9 @@ int get_amino_number(const char *amino_sigla);
 int get_atom_number(const char *atomo_letra_local);
 void hsvtorgb(unsigned char *r, unsigned char *g, unsigned char *b, unsigned char h, unsigned char s, unsigned char v);
 
-//parameters.cu
-void parameters_window();
-//void seta_variaveis();
-void handleKeypress(int theKey, int theAction);
-//void setVS(string s1, GLfloat valor);
-//GLfloat getVS(string s1);
-//void sV(string s1, string s2, GLfloat);
-//GLfloat gV(string s1, string s2);
-
 //learn.cu
 void change_properties();
 // -------------------------------------------
-//class vsc {
-//public:
-//	string s1;
-//	string s2;
-//	string s3;
-//	string s4;
-//	GLfloat f1;
-//	GLfloat f2;
-//	GLfloat f3;
-//	GLfloat f4;
-//};
-//map<string, string, string> vs;
 
 // Function to convert degrees to radians
 float toRads(const float &theAngleInDegrees) {
@@ -344,55 +323,7 @@ void add_energy() {
 	}
 }
 
-void seta_variaveis() {
-	// -------- Definindo variaveis -----------
-	vF["screen"]["movementSpeedFactor"] = &movementSpeedFactor;
-	vF["screen"]["caixa_tamanho"] = &caixa_tamanho;
-	vF["tuning"]["max_distance_hydrogen_bond"] = &max_distance_hydrogen_bond;
-	vF["tuning"]["max_distance_disulfide_bond"] = &max_distance_disulfide_bond;
-	vF["contador"]["last_x"] = &last_x;
-	vF["contador"]["last_y"] = &last_y;
-
-	vI["fixo"]["atomos_quantidade"] = &atomos_quantidade;
-	vI["contador"]["cont_loop_electron"] = &cont_loop_electron;
-	vI["contador"]["cont_loop_electron_time"] = &cont_loop_electron_time;
-	vI["tuning"]["forca_externa_contador_max"] = &forca_externa_contador_max;
-	vI["tuning"]["forca_externa_contador_max_t"] = &forca_externa_contador_max_t;
-	vI["tuning"]["forca_externa_contador_max_hb"] = &forca_externa_contador_max_hb;
-	vI["tuning"]["forca_externa_contador_max_hb"] = &forca_externa_contador_max_db;
-	vI["tuning"]["calibration_precision"] = &calibration_precision;
-	vI["tuning"]["calibration_precision_out"] = &calibration_precision_out;
-	vI["tuning"]["calibration_minimal_distance"] = &calibration_minimal_distance;
-	vI["contador"]["contador_restart"] = &contador_restart;
-	vI["tuning"]["contador_restart_max_error"] = &contador_restart_max_error;
-	vI["contador"]["contador_restart_life"] = &contador_restart_life;
-	vI["screen"]["atomo_selecionado"] = &atomo_selecionado;
-	vI["contador"]["contador_amino"] = &contador_amino;
-	vI["fixo"]["percurso_contador"] = &percurso_contador;
-	vI["contador"]["percurso_contador_loop"] = &percurso_contador_loop;
-	vI["contador"]["chain_ultimo_atomo"] = &chain_ultimo_atomo;
-	vI["contador"]["forca_externa_contador"] = &forca_externa_contador;
-	vI["contador"]["forca_externa_contador_t"] = &forca_externa_contador_t;
-	vI["contador"]["forca_externa_contador_hb"] = &forca_externa_contador_hb;
-	vI["contador"]["forca_externa_contador_db"] = &forca_externa_contador_db;
-	vI["contador"]["testesphera_contador"] = &testesphera_contador;
-	vI["contador"]["contador_sleep"] = &contador_sleep;
-
-	vB["screen"]["mousefree"] = &mousefree;
-	vB["screen"]["show_power_sphere"] = &show_power_sphere;
-	vB["screen"]["show_perimetro"] = &show_perimetro;
-	vB["screen"]["show_base_line"] = &show_base_line;
-	vB["screen"]["show_base"] = &show_base;
-	vB["screen"]["rastreio"] = &rastreio;
-	vB["screen"]["paused"] = &paused;
-	vB["screen"]["show_colisao_tensao"] = &show_colisao_tensao;
-	vB["screen"]["show_tensao_hb"] = &show_tensao_hb;
-	vB["screen"]["show_comparation"] = &show_comparation;
-	vB["screen"]["show_comparation_speed"] = &show_comparation_speed;
-}
-
 void initGL() {
-	seta_variaveis();
 	// ----- GLFW Settings -----
 
 //	glfwDisable(GLFW_MOUSE_CURSOR); // Hide the mouse cursor
@@ -422,13 +353,21 @@ void initGL() {
 
 	// ----- OpenGL settings -----
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Set out clear colour to black, full alpha
+
 	glfwSwapInterval(1); // Lock to vertical sync of monitor (normally 60Hz, so 60fps)
+
 	glShadeModel(GL_SMOOTH);    // Enable (gouraud) shading
+
 	glEnable(GL_DEPTH_TEST);    // Enable depth testing
+
 	glClearDepth(1.0f);         // Clear the entire depth of the depth buffer
+
 	glDepthFunc(GL_LEQUAL);	// Set our depth function to overwrite if new value less than or equal to current value
+
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); // Ask for nicest perspective correction
+
 	glEnable(GL_CULL_FACE); // Do not draw polygons facing away from us
+
 	glLineWidth(2.0f);			// Set a 'chunky' line width
 
 	// ---- Set up OpenGL lighting -----
@@ -480,10 +419,10 @@ void initGL() {
 	last_y = 0 - 10.0;
 	srand((unsigned) time(0));
 
-//	distance_calibration();
+	distance_calibration();
 	distance_calibration_pdb("1wqc");
 	load_protein("1wqc");
-//	load_protein_models("1wqc");
+	load_protein_models("1wqc");
 
 //	posx_backup = posx;
 	memcpy(posx_backup, posx, sizeof(posx));
@@ -504,18 +443,18 @@ void initGL() {
 //int colorB[3] = [255, 0, 0];
 
 // -----------------
-	// ------------ descomentar pra iniciar pausado -------------
-//	paused = true;
-//
-//	for (GLint i = 0; i < atomos_quantidade; i++) {
-//		velocidade_x_backup[i] = velocidade_x[i];
-//		velocidade_y_backup[i] = velocidade_y[i];
-//		velocidade_z_backup[i] = velocidade_z[i];
-//		velocidade_x[i] = 0.0;
-//		velocidade_y[i] = 0.0;
-//		velocidade_z[i] = 0.0;
-//		cont_loop_electron_time = 999999999;
-//	}
+
+	paused = true;
+
+	for (GLint i = 0; i < atomos_quantidade; i++) {
+		velocidade_x_backup[i] = velocidade_x[i];
+		velocidade_y_backup[i] = velocidade_y[i];
+		velocidade_z_backup[i] = velocidade_z[i];
+		velocidade_x[i] = 0.0;
+		velocidade_y[i] = 0.0;
+		velocidade_z[i] = 0.0;
+		cont_loop_electron_time = 999999999;
+	}
 //	load_protein("8RXN");
 // ---------------------
 //	read_pdb_amino("TRP");
@@ -545,9 +484,6 @@ void moveCamera() {
 
 // Function to deal with mouse position changes, called whenever the mouse cursorm moves
 void handleMouseMove(int mouseX, int mouseY) {
-	if (mousefree == true) {
-		return;
-	}
 	GLfloat vertMouseSensitivity = 20.0f;
 	GLfloat horizMouseSensitivity = 20.0f;
 
@@ -556,42 +492,21 @@ void handleMouseMove(int mouseX, int mouseY) {
 	int horizMovement = mouseX - midWindowX;
 	int vertMovement = mouseY - midWindowY;
 
-//	camXRot += vertMovement / vertMouseSensitivity;
-//	camYRot += horizMovement / horizMouseSensitivity;
-	camXRot += (vertMovement / vertMouseSensitivity);
-	camYRot += (horizMovement / horizMouseSensitivity);
+	camXRot += vertMovement / vertMouseSensitivity;
+	camYRot += horizMovement / horizMouseSensitivity;
 
 // Control looking up and down with the mouse forward/back movement
 // Limit loking up to vertically up
-//	if (camXRot < -90.0f) {
-//		camXRot = -90.0f;
-//	}
-//
-//// Limit looking down to vertically down
-//	if (camXRot > 90.0f) {
-//		camXRot = 90.0f;
-//	}
-//
-//// Looking left and right. Keep the angles in the range -180.0f (anticlockwise turn looking behind) to 180.0f (clockwise turn looking behind)
-//	if (camYRot < -180.0f) {
-//		camYRot += 360.0f;
-//	}
-//
-//	if (camYRot > 180.0f) {
-//		camYRot -= 360.0f;
-//	}
-	// Control looking up and down with the mouse forward/back movement
-	// Limit loking up to vertically up
 	if (camXRot < -90.0f) {
 		camXRot = -90.0f;
 	}
 
-	// Limit looking down to vertically down
+// Limit looking down to vertically down
 	if (camXRot > 90.0f) {
 		camXRot = 90.0f;
 	}
 
-	// Looking left and right. Keep the angles in the range -180.0f (anticlockwise turn looking behind) to 180.0f (clockwise turn looking behind)
+// Looking left and right. Keep the angles in the range -180.0f (anticlockwise turn looking behind) to 180.0f (clockwise turn looking behind)
 	if (camYRot < -180.0f) {
 		camYRot += 360.0f;
 	}
@@ -658,6 +573,30 @@ void calculaposicoes() {
 	if (pressionando_m == true) {
 		posy[0] = posy[0] - 0.1f;
 	}
+
+	if (pressionando_o == true) {
+		velocidade_x[0] -= 0.001;
+	}
+
+	if (pressionando_p == true) {
+		velocidade_x[0] += 0.001;
+	}
+
+	if (pressionando_0 == true) {
+		velocidade_y[0] += 0.001;
+	}
+
+	if (pressionando_l == true) {
+		velocidade_y[0] -= 0.001;
+	}
+
+	if (pressionando_8 == true) {
+		velocidade_z[0] -= 0.001;
+	}
+
+	if (pressionando_9 == true) {
+		velocidade_z[0] += 0.001;
+	}
 }
 
 // Function to calculate which direction we need to move the camera and by what amount
@@ -715,24 +654,33 @@ void calculateCameraMovement() {
 	camZSpeed = camMovementZComponent;
 
 // Cap the speeds to our movementSpeedFactor (otherwise going forward and strafing at an angle is twice as fast as just going forward!)
+// X Speed cap
 	if (camXSpeed > movementSpeedFactor) {
+		//cout << "high capping X speed to: " << movementSpeedFactor << endl;
 		camXSpeed = movementSpeedFactor;
 	}
 	if (camXSpeed < -movementSpeedFactor) {
+		//cout << "low capping X speed to: " << movementSpeedFactor << endl;
 		camXSpeed = -movementSpeedFactor;
 	}
 
+// Y Speed cap
 	if (camYSpeed > movementSpeedFactor) {
+		//cout << "low capping Y speed to: " << movementSpeedFactor << endl;
 		camYSpeed = movementSpeedFactor;
 	}
 	if (camYSpeed < -movementSpeedFactor) {
+		//cout << "high capping Y speed to: " << movementSpeedFactor << endl;
 		camYSpeed = -movementSpeedFactor;
 	}
 
+// Z Speed cap
 	if (camZSpeed > movementSpeedFactor) {
+		//cout << "high capping Z speed to: " << movementSpeedFactor << endl;
 		camZSpeed = movementSpeedFactor;
 	}
 	if (camZSpeed < -movementSpeedFactor) {
+		//cout << "low capping Z speed to: " << movementSpeedFactor << endl;
 		camZSpeed = -movementSpeedFactor;
 	}
 }
@@ -817,9 +765,6 @@ void ativa_desativa_tensao_hb() {
 }
 
 void camera_position(GLfloat px, GLfloat py, GLfloat pz, GLfloat rx, GLfloat ry, GLfloat rz) {
-//	camXRot = rx;
-//	camYRot = ry;
-//	camZRot = rz;
 	camXRot = rx;
 	camYRot = ry;
 	camZRot = rz;
@@ -1046,6 +991,270 @@ void add_chain() {
 //	add_glu(false, false);
 //	add_glu(false, false);
 //	add_glu(false, true);
+}
+// Function to set flags according to which keys are pressed or released
+void handleKeypress(int theKey, int theAction) {
+// If a key is pressed, toggle the relevant key-press flag
+	if (theAction == GLFW_PRESS) {
+		if (pressionando_control) {
+			switch (theKey) {
+			case 'C':
+				add_atom('C');
+				break;
+
+			case 'H':
+				add_atom('H');
+				break;
+
+			case 'O':
+				add_atom('O');
+				break;
+
+			case 'N':
+				add_atom('N');
+				break;
+
+			case '1':
+				ativa_desativa_colisao_tensao();
+				break;
+
+			case '2':
+				ativa_desativa_tensao_hb();
+				break;
+
+			case '3':
+				compare_protein_build_MD(0);
+				break;
+
+			case '4':
+				ativa_desativa_comparation();
+				break;
+
+			case '5':
+				restaura_posicoes();
+				break;
+
+			case '6':
+				ativa_desativa_comparation_speed();
+				break;
+
+			case '.':
+				calibration_precision++;
+				distance_calibration();
+				break;
+
+			case ',':
+				calibration_precision--;
+				distance_calibration();
+				break;
+			}
+		} else {
+			switch (theKey) {
+			case 289:
+				pressionando_control = true;
+				break;
+
+			case 'W':
+				holdingForward = true;
+				break;
+
+			case 'S':
+				holdingBackward = true;
+				break;
+
+			case 'A':
+				holdingLeftStrafe = true;
+				break;
+
+			case 'D':
+				holdingRightStrafe = true;
+				break;
+
+			case 'K':
+				pressionando_k = true;
+				break;
+
+			case 'J':
+				pressionando_j = true;
+				break;
+
+			case 'I':
+				pressionando_i = true;
+				break;
+
+			case 'M':
+				pressionando_m = true;
+				break;
+
+			case 'Y':
+				posz[0] -= 0.5;
+				break;
+
+			case 'H':
+				posz[0] += 0.5;
+				break;
+
+			case 'O':
+				pressionando_o = true;
+				break;
+
+			case 'P':
+				pressionando_p = true;
+				break;
+
+			case '0':
+				pressionando_0 = true;
+				break;
+
+			case 'L':
+				pressionando_l = true;
+				break;
+
+			case '8':
+				pressionando_8 = true;
+				break;
+
+			case '9':
+				pressionando_9 = true;
+				break;
+
+			case 'B':
+				show_variables();
+				break;
+
+			case 'G':
+				add_chain();
+				break;
+
+			case '1':
+				camera_position(0.0, 0.0, caixa_tamanho, 0.0, 0.0, 0.0);
+				break;
+
+			case '2':
+				camera_position(caixa_tamanho * 6.0, 0.0, -90.0, 0.0, -90.0, 0.0);
+				break;
+
+			case '3':
+				camera_position(0.0, caixa_tamanho * 6.0, -90.0, 90.0, 180.0, -90.0);
+				break;
+
+			case '4':
+				camera_position(caixa_tamanho * 3.0, caixa_tamanho * 3.0, caixa_tamanho, 27.0, -30.0, 0.0);
+				break;
+
+			case 'E':
+				ativa_desativa_perimetro();
+				break;
+
+			case 'R':
+				ativa_desativa_rastreio();
+				break;
+
+			case 'F':
+				ativa_desativa_forca();
+				break;
+
+			case 'Z':
+				rem_energy();
+				break;
+
+			case 'X':
+				add_energy();
+				break;
+
+			case 'C':
+				continua();
+				break;
+
+			case ',':
+				caixa_tamanho -= 0.5;
+				break;
+
+			case '.':
+				caixa_tamanho += 0.5;
+				break;
+
+			case 'T':
+				ativa_desativa_base();
+				break;
+
+			case '5':
+				ativa_desativa_base_line();
+				break;
+
+			default:
+				// Do nothing...
+				break;
+			}
+		}
+	} else // If a key is released, toggle the relevant key-release flag
+	{
+		switch (theKey) {
+		case 289:
+			pressionando_control = false;
+			break;
+
+		case 'W':
+			holdingForward = false;
+			break;
+
+		case 'S':
+			holdingBackward = false;
+			break;
+
+		case 'A':
+			holdingLeftStrafe = false;
+			break;
+
+		case 'D':
+			holdingRightStrafe = false;
+			break;
+
+		case 'K':
+			pressionando_k = false;
+			break;
+
+		case 'J':
+			pressionando_j = false;
+			break;
+
+		case 'I':
+			pressionando_i = false;
+			break;
+
+		case 'M':
+			pressionando_m = false;
+			break;
+
+		case 'O':
+			pressionando_o = false;
+			break;
+
+		case 'P':
+			pressionando_p = false;
+			break;
+
+		case '0':
+			pressionando_0 = false;
+			break;
+
+		case 'L':
+			pressionando_l = false;
+			break;
+
+		case '8':
+			pressionando_8 = false;
+			break;
+
+		case '9':
+			pressionando_9 = false;
+			break;
+
+		default:
+			// Do nothing...
+			break;
+		}
+	}
 }
 
 // Function to draw a grid of lines
@@ -1477,8 +1686,8 @@ void drawScene() {
 				if (amino_sequencial[i] != amino_sequencial[ii]) {
 					same_amino = 1;
 				}
-				if (calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]] == 0.0) {
-//					printf("Nao existe valor para %d %s %d %s\n", amino[i], atomo_letraL[i].c_str(), amino[ii], atomo_letraL[ii].c_str());
+				if(calibrationMin[amino[i]][atomo_letraN[i]][same_amino][amino[ii]][atomo_letraN[ii]] == 0.0){
+					printf("Nao existe valor para %d %s %d %s\n", amino[i], atomo_letraL[i].c_str(), amino[ii], atomo_letraL[ii].c_str());
 //					printf("Nao existe valor para %s\n", amino[i]);
 				}
 				// Comentado pra resolve o problema de atomos se alinhando
@@ -1574,7 +1783,7 @@ void drawScene() {
 				glColor3ub(200, 67, 55);
 			}
 		}
-		if (vp["global"]["atomo_selecionado"][""][""][""][""] == i) {
+		if (atomo_selecionado == i) {
 			glColor3ub(255, 255, 255);
 		}
 		glTranslatef(posx[i], posy[i], posz[i]);
@@ -1761,28 +1970,25 @@ void drawScene() {
 	}
 
 // Imprime texto na tela
-	parameters_window();
-//	glMatrixMode(GL_PROJECTION);
-//	glPushMatrix();
-//	glLoadIdentity();
-//	gluOrtho2D(0.0, windowWidth, 0.0, windowHeight);
-//	glMatrixMode(GL_MODELVIEW);
-//	glPushMatrix();
-//	glLoadIdentity();
-//	glColor3f(0.0, 1.0, 0.0);				// Green
-//	glRasterPos2i(10, 10);
-//	void * font = GLUT_BITMAP_9_BY_15;
-//	for (string::iterator i = fps.begin(); i != fps.end(); ++i) {
-//		char c = *i;
-//		glutBitmapCharacter(font, c);
-//	}
-//	glMatrixMode(GL_MODELVIEW);
-//	glPopMatrix();
-//
-//	glMatrixMode(GL_PROJECTION);
-//	glPopMatrix();
-//
-//	parameters_window();
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	gluOrtho2D(0.0, windowWidth, 0.0, windowHeight);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	glColor3f(0.0, 1.0, 0.0);				// Green
+	glRasterPos2i(10, 10);
+	void * font = GLUT_BITMAP_9_BY_15;
+	for (string::iterator i = fps.begin(); i != fps.end(); ++i) {
+		char c = *i;
+		glutBitmapCharacter(font, c);
+	}
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
 // ----- Stop Drawing Stuff! ------
 	glfwSwapBuffers();				// Swap the buffers to display the scene (so we don't have to watch it being drawn!)
 }
@@ -1815,9 +2021,9 @@ static void mouse_button_callback(int key, int action) {
 			}
 		}
 		if (encontrado_d <= 0.003) {
-			vp["global"]["atomo_selecionado"][""][""][""][""] = encontrado_i;
+			atomo_selecionado = encontrado_i;
 		} else {
-			vp["global"]["atomo_selecionado"][""][""][""][""] = -1;
+			atomo_selecionado = -1;
 		}
 		printf("Atomo selecionado: %d\n", encontrado_i);
 		printf("%s A:%d V(%f %f %f)(%f %f %f)\n", atomo_letraL[encontrado_i].c_str(), amino_sequencial[encontrado_i], velocidade_x[encontrado_i], velocidade_y[encontrado_i], velocidade_z[encontrado_i], velocidade_x_backup[encontrado_i], velocidade_y_backup[encontrado_i], velocidade_z_backup[encontrado_i]);
@@ -1859,29 +2065,29 @@ int main(int argc, char **argv) {
 
 // Initialise GLee once we've got a rendering context
 // Note: We don't really have to do this because it's called automatically, but if we do it - we KNOW it's been called!
-//	GLeeInit();
-//
-//// Check for the OpenGL extension which allows us to use vsync
-//	if (GLEE_GLX_SGI_swap_control) {
-//		cout << "Extension found: GLX_SGI_swap_control (vsync can be used)." << endl;
-//		glfwSwapInterval(1);
-//	} else {
-//		cout << "Extension NOT found: GLX_SGI_swap_control (vsync cannot be used)." << endl;
-//		glfwSwapInterval(0);
-//	}
-//
-//// Check for the OpenGL extension which allows us to use antialiasing
-//	if (GLEE_ARB_multitexture) {
-//		cout << "Extension found: GLX_ARB_multitexture (anti-aliasing can be used)." << endl;
-//
-//// If the extension's available, we likely got anti-aliasing, so disable line smoothing as it comes free with the AA
-//		glDisable(GL_LINE_SMOOTH);
-//	} else {
-//		cout << "Extension NOT found: GLX_ARB_multitexture (anti-aliasing cannot be used)." << endl;
-//
-//// If the extention's not available, turn on line smoothing
-//		glEnable(GL_LINE_SMOOTH);
-//	}
+	GLeeInit();
+
+// Check for the OpenGL extension which allows us to use vsync
+	if (GLEE_GLX_SGI_swap_control) {
+		cout << "Extension found: GLX_SGI_swap_control (vsync can be used)." << endl;
+		glfwSwapInterval(1);
+	} else {
+		cout << "Extension NOT found: GLX_SGI_swap_control (vsync cannot be used)." << endl;
+		glfwSwapInterval(0);
+	}
+
+// Check for the OpenGL extension which allows us to use antialiasing
+	if (GLEE_ARB_multitexture) {
+		cout << "Extension found: GLX_ARB_multitexture (anti-aliasing can be used)." << endl;
+
+// If the extension's available, we likely got anti-aliasing, so disable line smoothing as it comes free with the AA
+		glDisable(GL_LINE_SMOOTH);
+	} else {
+		cout << "Extension NOT found: GLX_ARB_multitexture (anti-aliasing cannot be used)." << endl;
+
+// If the extention's not available, turn on line smoothing
+		glEnable(GL_LINE_SMOOTH);
+	}
 
 // Set the mouse cursor to the centre of our window
 	glfwSetMousePos(midWindowX, midWindowY);

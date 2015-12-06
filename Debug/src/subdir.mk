@@ -9,8 +9,7 @@ CU_SRCS += \
 ../src/learn.cu \
 ../src/parameters.cu \
 ../src/pdb.cu \
-../src/util.cu \
-../src/vglobals.cu 
+../src/util.cu 
 
 OBJS += \
 ./src/aminos.o \
@@ -18,8 +17,7 @@ OBJS += \
 ./src/learn.o \
 ./src/parameters.o \
 ./src/pdb.o \
-./src/util.o \
-./src/vglobals.o 
+./src/util.o 
 
 CU_DEPS += \
 ./src/aminos.d \
@@ -27,8 +25,7 @@ CU_DEPS += \
 ./src/learn.d \
 ./src/parameters.d \
 ./src/pdb.d \
-./src/util.d \
-./src/vglobals.d 
+./src/util.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

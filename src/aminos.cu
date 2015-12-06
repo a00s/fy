@@ -15,8 +15,8 @@
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
 #include <cppconn/resultset.h>
-#include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
+#include <cppconn/statement.h>
 using namespace std;
 
 vector<GLfloat> pdbamin_coordenadas_x;

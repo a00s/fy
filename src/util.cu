@@ -22,6 +22,7 @@ extern GLint calibration_precision;
 extern GLint calibration_precision_out;
 extern GLfloat calibrationMin[20][34][2][20][34]; // [Amino1][Atom1][Same|Another][Amino2][Atom2]
 extern GLfloat calibrationMax[20][34][2][20][34]; // [Amino1][Atom1][Same|Another][Amino2][Atom2]
+extern map<string, map<string, map<string, map<string, map<string, map<string, GLfloat> > > > > > vs;
 
 int get_amino_number(const char *amino_sigla) {
 	//  Glu = 0
@@ -232,7 +233,10 @@ void distance_calibration() {
 		while (res->next()) {
 			calibrationMin[get_amino_number(res->getString("amino").c_str())][get_atom_number(res->getString("atom1").c_str())][0][get_amino_number(res->getString("amino").c_str())][get_atom_number(res->getString("atom2").c_str())] = res->getDouble(4);
 			calibrationMax[get_amino_number(res->getString("amino").c_str())][get_atom_number(res->getString("atom1").c_str())][0][get_amino_number(res->getString("amino").c_str())][get_atom_number(res->getString("atom2").c_str())] = res->getDouble(5);
+			//vs["calibrationMin"][res->getString("amino").c_str()][res->getString("atom1").c_str()]["Same"][res->getString("amino").c_str()][res->getString("atom2").c_str()] = res->getDouble(4);
+			//vs["calibrationMax"][res->getString("amino").c_str()][res->getString("atom1").c_str()]["Same"][res->getString("amino").c_str()][res->getString("atom2").c_str()] = res->getDouble(5);
 		}
+
 		// -------- Different amino acid ---------
 //		pstmt = con->prepareStatement("SELECT i_380488 aminofrom, i_380500 aminoto, i_380494 atom1, i_380506 atom2, i_380517 min_distance, i_380523 max_distance FROM a_380484 WHERE i_380529=? AND i_380512 IS NULL");
 		pstmt = con->prepareStatement("SELECT i_380488 aminofrom, i_380500 aminoto, i_380494 atom1, i_380506 atom2, i_380517 min_distance, i_380523 max_distance FROM (SELECT * FROM a_380484 WHERE i_380512 IS NULL AND i_393242/*pdbid*/ IS NULL ORDER BY i_380529 DESC) tabtemp GROUP BY i_380488,i_380500,i_380494,i_380506");
@@ -269,13 +273,49 @@ void distance_calibration_pdb(string PDBID) {
 //			printf("Recalibrando %s %s %s\n",res->getString("amino").c_str(),res->getString("atom1").c_str(),res->getString("atom2").c_str());
 			calibrationMin[get_amino_number(res->getString("amino").c_str())][get_atom_number(res->getString("atom1").c_str())][0][get_amino_number(res->getString("amino").c_str())][get_atom_number(res->getString("atom2").c_str())] = res->getDouble(4);
 			calibrationMax[get_amino_number(res->getString("amino").c_str())][get_atom_number(res->getString("atom1").c_str())][0][get_amino_number(res->getString("amino").c_str())][get_atom_number(res->getString("atom2").c_str())] = res->getDouble(5);
+			vs["PDBcalibrationMin"][res->getString("amino").c_str()][res->getString("atom1").c_str()]["Same"][res->getString("amino").c_str()][res->getString("atom2").c_str()] = res->getDouble(4);
+			vs["PDBcalibrationMax"][res->getString("amino").c_str()][res->getString("atom1").c_str()]["Same"][res->getString("amino").c_str()][res->getString("atom2").c_str()] = res->getDouble(5);
 		}
 		delete res;
 		delete pstmt;
 		delete con;
 		printf("System calibrated PDB\n");
+//		typedef map<string, map<string, map<string, map<string, map<string, GLfloat> > > > > inner_map;
+//		typedef map<string, inner_map> outer_map;
+
+//		for (outer_map::iterator i = ivs.begin(), iend = ivs.end(); i != iend; ++i)
+//		{
+//		    inner_map &innerMap = i->second;
+//		    for (inner_map::iterator j = innerMap.begin(), jend = innerMap.end(); j != jend; ++j)
+//		    {
+//		        /* ... */
+//		    }
+//		}
+//		for (map<string, map<string, map<string, map<string, map<string, map<string, GLfloat> > > > > >::iterator i = vs.begin(); i != vs.end(); ++i) {
+//			for (map<string, map<string, map<string, map<string, map<string, GLfloat> > > > >::iterator ii = i->second.begin(); ii != i->second.end(); ++ii) {
+//				for (map<string, map<string, map<string, map<string, GLfloat> > > >::iterator iii = ii->second.begin(); iii != ii->second.end(); ++iii) {
+//					for (map<string, map<string, map<string, GLfloat> > >::iterator iiii = iii->second.begin(); iiii != iii->second.end(); ++iiii) {
+//						for (map<string, map<string, GLfloat> >::iterator iiiii = iiii->second.begin(); iiiii != iiii->second.end(); ++iiiii) {
+//							for (map<string, GLfloat>::iterator iiiiii = iiiii->second.begin(); iiiiii != iiiii->second.end(); ++iiiiii) {
+//								printf("%s %s %s %s %s %s %f\n", (*i).first.c_str(), (*ii).first.c_str(), (*iii).first.c_str(), (*iiii).first.c_str(), (*iiiii).first.c_str(), (*iiiiii).first.c_str(), (*iiiiii).second);
+//							}
+//						}
+//					}
+//				}
+//			}
+//		}
+//		map<string, map<string, map<string, map<string, map<string, map<string, GLfloat> > > > > >::iterator ivs;
+//		for (ivs = vs.begin(); ivs != vs.end(); ivs++) {
+//			printf("%s\n", ivs->first.c_str());
+//			map<string, map<string, map<string, map<string, map<string, GLfloat> > > > >::iterator ivs2;
+//			//			string tvar = ivs->first.c_str();
+//			for (ivs2 = ivs->second; ivs2 != ivs->second.end(); ivs2++) {
+//				//				string  = ivs2->first.c_str();
+//				//				tw[tvar] = tvar2;
+//			}
+//		}
 	} catch (sql::SQLException &e) {
-		printf("%s", e.getErrorCode());
+		printf("%d\n", e.getErrorCode());
 	}
 }
 

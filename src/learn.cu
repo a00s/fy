@@ -14,7 +14,10 @@
 using namespace std;
 
 GLint max_contador = 0;
-extern GLfloat max_distance_hydrogen_bond;
+extern map<string, GLfloat> vs;
+extern map<string, map<string, map<string, map<string, map<string, map<string, GLfloat> > > > > > vp;
+
+//extern GLfloat max_distance_hydrogen_bond;
 extern GLint forca_externa_contador_max_hb;
 
 extern GLint forca_externa_contador_max;
@@ -26,7 +29,8 @@ GLint forca_externa_contador_max_best_t = 0;
 extern GLint calibration_minimal_distance;
 
 extern GLint contador_restart_life;
-
+extern void sV(string s1, string s2, GLfloat valor);
+extern GLfloat gV(string s1, string s2);
 void change_properties(){
 
 	// Procurando valores pra tracao e colisao ------------------------------------------------
@@ -41,9 +45,9 @@ void change_properties(){
 		forca_externa_contador_max = 0;
 		forca_externa_contador_max_t++;
 		if(forca_externa_contador_max_t > 30){
-				forca_externa_contador_max_t = 0;
+			forca_externa_contador_max_t = 0;
 		}
 	}
-	printf("forca_externa_contador_max: %d t: %d best: %d bestt: %d max_contador_best: %d\n",forca_externa_contador_max,forca_externa_contador_max_t,forca_externa_contador_max_best,forca_externa_contador_max_best_t,max_contador);
+	printf("forca_externa_contador_max: %d %f: %d best: %d bestt: %d max_contador_best: %d\n",forca_externa_contador_max,forca_externa_contador_max_t,forca_externa_contador_max_best,forca_externa_contador_max_best_t,max_contador);
 	// ----------------------------------------------------------------------------------------
 }
