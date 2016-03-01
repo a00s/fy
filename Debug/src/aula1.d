@@ -203,4 +203,12 @@ src/aula1.o : ../src/aula1.cu \
     /usr/include/c++/5/bits/stl_tree.h \
     /usr/include/c++/5/bits/stl_map.h \
     /usr/include/c++/5/bits/stl_multimap.h \
-    ../src/gvariaveis.h
+    /usr/include/c++/5/vector \
+    /usr/include/c++/5/bits/stl_construct.h \
+    /usr/include/c++/5/bits/stl_uninitialized.h \
+    /usr/include/c++/5/bits/stl_vector.h \
+    /usr/include/c++/5/bits/stl_bvector.h \
+    /usr/include/c++/5/bits/vector.tcc \
+    ../src/gvariaveis.h \
+    ../src/struct.h \
+    ../src/matrix3d.h

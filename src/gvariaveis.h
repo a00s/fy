@@ -28,8 +28,11 @@ extern bool show_tensao_hb;
 extern bool show_comparation;
 extern bool show_comparation_speed;
 
+extern GLfloat posx[1000];
+extern GLfloat posy[1000];
 extern GLfloat posz[1000];
 extern GLfloat caixa_tamanho;
+extern GLint ghost_angulo;
 
 extern void add_atom(char atomo_ll);
 extern void camera_position(GLfloat px, GLfloat py, GLfloat pz, GLfloat rx, GLfloat ry, GLfloat rz);
@@ -51,3 +54,4 @@ extern void add_energy();
 extern void continua();
 extern void ativa_desativa_base();
 extern void ativa_desativa_base_line();
+extern void ativa_desativa_ghost_protein();

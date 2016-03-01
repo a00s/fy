@@ -43,8 +43,8 @@
 									<listOptionValue builtIn="false" value="GLU"/>
 								</option>
 								<option id="com.nvidia.cuda.ide.build.linker.ccbin.1494011057" name="Compiler Path (-ccbin)" superClass="com.nvidia.cuda.ide.build.linker.ccbin" value="" valueType="string"/>
-								<option id="nvcc.linker.option.paths.1084460263" name="Library search path (-L)" superClass="nvcc.linker.option.paths" valueType="libPaths"/>
-								<option id="nvcc.linker.option.other.854608662" name="Other options (-Xlinker [option])" superClass="nvcc.linker.option.other" valueType="stringList"/>
+								<option id="nvcc.linker.option.paths.1084460263" name="Library search path (-L)" superClass="nvcc.linker.option.paths"/>
+								<option id="nvcc.linker.option.other.854608662" name="Other options (-Xlinker [option])" superClass="nvcc.linker.option.other"/>
 								<inputType id="nvcc.linker.input.641621090" superClass="nvcc.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

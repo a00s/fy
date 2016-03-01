@@ -10,7 +10,7 @@ unless($pdb_destino){
     print "Use ./importa_unico.pdb 3NIR (maiusculo)\n\n";
     exit;
 }
-# `wget -O pdb_seqres.txt ftp://ftp.wwpdb.org/pub/pdb/derived_data/pdb_seqres.txt`;
+`wget -O pdb_seqres.txt ftp://ftp.wwpdb.org/pub/pdb/derived_data/pdb_seqres.txt`;
 
 open(FILE,"< pdb_seqres.txt");
 @content = <FILE>;

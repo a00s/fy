@@ -229,6 +229,7 @@ void handleKeypress(int theKey, int theAction) {
 		tw["M"] = "A/D perimetro";
 		tw["J"] = "A/D rastreio";
 		tw["F"] = "A/D forca";
+		tw["G"] = "A/D ghost protein";
 		if (theAction == GLFW_PRESS) {
 			switch (theKey) {
 			case 'P':
@@ -244,13 +245,13 @@ void handleKeypress(int theKey, int theAction) {
 				ativa_desativa_comparation();
 				break;
 			case 'E':
-				camera_position(0.0, 0.0, caixa_tamanho, 0.0, 0.0, 0.0);
+				camera_position(0.0, 0.0, -15.0, 0.0, 0.0, 0.0);
 				break;
 			case 'R':
-				camera_position(caixa_tamanho * 6.0, 0.0, -90.0, 0.0, -90.0, 0.0);
+				camera_position(-40.0, 0.0, -50.0, 0.0, 90.0, 0.0);
 				break;
 			case 'T':
-				camera_position(0.0, caixa_tamanho * 6.0, -90.0, 90.0, 180.0, -90.0);
+				camera_position(0.0, 40.0, -50.0, 90.0, 0.0, 0.0);
 				break;
 			case 'Y':
 				camera_position(caixa_tamanho * 3.0, caixa_tamanho * 3.0, caixa_tamanho, 27.0, -30.0, 0.0);
@@ -275,6 +276,27 @@ void handleKeypress(int theKey, int theAction) {
 				break;
 			case 'F':
 				ativa_desativa_forca();
+				break;
+			case 'G':
+				ativa_desativa_ghost_protein();
+				break;
+			case 'I':
+				posx[99] -= 0.1;
+				break;
+			case 'O':
+				posx[99] += 0.1;
+				break;
+			case '9':
+				posy[99] += 0.1;
+				break;
+			case 'K':
+				posy[99] -= 0.1;
+				break;
+			case 'L':
+				posz[99] -= 0.1;
+				break;
+			case ';':
+				posz[99] += 0.1;
 				break;
 			}
 		} else {

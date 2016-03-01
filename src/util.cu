@@ -276,6 +276,21 @@ void distance_calibration_pdb(string PDBID) {
 			vs["PDBcalibrationMin"][res->getString("amino").c_str()][res->getString("atom1").c_str()]["Same"][res->getString("amino").c_str()][res->getString("atom2").c_str()] = res->getDouble(4);
 			vs["PDBcalibrationMax"][res->getString("amino").c_str()][res->getString("atom1").c_str()]["Same"][res->getString("amino").c_str()][res->getString("atom2").c_str()] = res->getDouble(5);
 		}
+		// -------- Different amino acid ---------
+		pstmt = con->prepareStatement("SELECT i_380488 amino, i_380494 atom1, i_380500 amino2, i_380506 atom2, i_380517 min_distance FROM a_380484 WHERE i_380512 IS NULL AND i_393242/*pdbid*/ = ? ORDER BY i_380529 DESC");
+		pstmt->setString(1, PDBID);
+		res = pstmt->executeQuery();
+		while (res->next()) {
+//			if (get_amino_number(res->getString("amino").c_str()) == 19 && get_amino_number(res->getString("amino2").c_str()) == 2 && get_atom_number(res->getString("atom1").c_str()) == 0 && get_atom_number(res->getString("atom2").c_str()) == 0) {
+//				printf("Recalibrando %s %s %s %s\n", res->getString("amino").c_str(), res->getString("amino2").c_str(), res->getString("atom1").c_str(), res->getString("atom2").c_str());
+//			}
+			calibrationMin[get_amino_number(res->getString("amino").c_str())][get_atom_number(res->getString("atom1").c_str())][1][get_amino_number(res->getString("amino2").c_str())][get_atom_number(res->getString("atom2").c_str())] = res->getDouble(5);
+			vs["PDBcalibrationMin"][res->getString("amino").c_str()][res->getString("atom1").c_str()]["Different"][res->getString("amino2").c_str()][res->getString("atom2").c_str()] = res->getDouble(5);
+//			if (get_amino_number(res->getString("amino").c_str()) == 19 && get_amino_number(res->getString("amino2").c_str()) == 2 && get_atom_number(res->getString("atom1").c_str()) == 0 && get_atom_number(res->getString("atom2").c_str()) == 0) {
+//				printf("Resultado %f %f %s\n", calibrationMin[19][0][1][2][0], res->getDouble(5),res->getString(5).c_str());
+//			}
+		}
+//		printf("Procurando %f %d %d %d\n", calibrationMin[19][0][1][2][0], get_amino_number("PRO"), get_amino_number("GLN"), get_atom_number("C1"));
 		delete res;
 		delete pstmt;
 		delete con;
@@ -374,3 +389,16 @@ void hsvtorgb(unsigned char *r, unsigned char *g, unsigned char *b, unsigned cha
 
 	return;
 }
+
+// para poder calcular os angulos eh necessario o valor absoluto da distancia entre dois pontos cartezianos
+//float distacia_cartesiana(float valor1, float valor2){
+//	float valor_final = 0;
+//	if((valor1 < 0 && valor2 > 0) || (valor1 > 0 && valor2 < 0)){
+//		printf("Lados difernetes\n");
+//		valor_final = valor1 + valor2;
+//		if(valor_final < 0){
+//			valor_final *= -1;
+//		}
+//	}
+//}
+//}
