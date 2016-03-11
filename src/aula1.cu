@@ -496,7 +496,7 @@ void initGL() {
 
 	// Definindo atomos base do ghost
 	ghost_protein_atom[0] = 3;
-//	ghost_protein_atom[2] = 16;
+	ghost_protein_atom[1] = 85;
 //	ghost_protein_atom[2] = 99;
 	ghost_protein_atom[2] = 36;
 
@@ -1818,7 +1818,6 @@ void drawScene() {
 		// Achar angulo Y de B e rotacionar B para que fique perpendicular com X (ghost_eixo_y)
 		// Rotacionar no eixo Z usando variavel diferenca_eixo_z
 		// Rotacionar de volta no eixo Y usando ghost_eixo_y + diferenca_eixo_y
-// ---------------------------------------------------------------------
 
 		// Achar angulo Y de A e rotacionar A para que fique perpendicular com X (protein_eixo_y)
 		GLfloat protein_eixo_y = toAngle(atan(prot_2t_z / prot_2t_x));
@@ -1845,77 +1844,6 @@ void drawScene() {
 		// Achar diferenca de angulo Z entre A e B (diferenca_eixo_z)
 		GLfloat diferenca_eixo_z = ghost_eixo_z - protein_eixo_z;
 
-		// Parte 2
-		// Achar angulo Y de B e rotacionar B para que fique perpendicular com X (ghost_eixo_y)
-//		ghost_eixo_y = toAngle(atan(ghost_2_z / ghost_2_x));
-//		matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 0, 1, 0, ghost_eixo_y);
-//		// Rotacionar no eixo Z usando variavel diferenca_eixo_z
-//		matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 0, 1, diferenca_eixo_z);
-//		// Rotacionar de volta no eixo Y usando ghost_eixo_y + diferenca_eixo_y
-//		matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 1, 0, -(ghost_eixo_y - diferenca_eixo_y));
-//		ghost_2_x = outputMatrix[0][0];
-//		ghost_2_y = outputMatrix[1][0];
-//		ghost_2_z = outputMatrix[2][0];
-
-//		printf("Dist ghost: %f %f %f %f\n", show_distance(0, ghost_2_x, 0, ghost_2_y, 0, ghost_2_z), ghost_eixo_y, protein_eixo_y, -(ghost_eixo_y-diferenca_eixo_y));
-		// ------ Angulo Z
-//		GLfloat ghost_angulo_z = toAngle(atan(ghost_2_x / ghost_2_y));
-//		GLfloat proteina_angulo_z = toAngle(atan(prot_2_x / prot_2_y));
-//		GLfloat angulo_diferenca_z = ghost_angulo_z - proteina_angulo_z;
-//		printf("Angulo Z %f %f %f\n", ghost_angulo, proteina_angulo, angulo_diferenca);
-//		matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 0, 0, 1, angulo_diferenca);
-//		ghost_2_x = outputMatrix[0][0];
-//		ghost_2_y = outputMatrix[1][0];
-//		ghost_2_z = outputMatrix[2][0];
-
-		// ------ Angulo X
-//		GLfloat ghost_angulo_x = toAngle(atan(ghost_2_z / ghost_2_y));
-//		GLfloat proteina_angulo_x = toAngle(atan(prot_2_z / prot_2_y));
-//		GLfloat angulo_diferenca_x = proteina_angulo_x - ghost_angulo_x;
-//
-//		matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 0, 0, 1, angulo_diferenca_z);
-//		ghost_2_x = outputMatrix[0][0];
-//		ghost_2_y = outputMatrix[1][0];
-//		ghost_2_z = outputMatrix[2][0];
-
-//		GLfloat trian_qual_a = show_distance(0, outputMatrix[0][0], 0, outputMatrix[1][0], 0, outputMatrix[2][0]);
-//		GLfloat trian_qual_b = show_distance(prot_2_x, outputMatrix[0][0], prot_2_y, outputMatrix[1][0], prot_2_z, outputMatrix[2][0]);
-//		GLfloat trian_qual_c = show_distance(0, prot_2_x, 0, prot_2_y, 0, prot_2_z);
-//		GLfloat angulo_erro = toAngle(acos((pow(trian_qual_a, 2) + pow(trian_qual_c, 2) - pow(trian_qual_b, 2)) / (2 * trian_qual_a * trian_qual_c)));
-//		GLfloat angulo_erro_proteina = toAngle(acos(prot_2_z / trian_qual_c));
-//		GLfloat angulo_erro_ghost = toAngle(acos(prot_2_z / trian_qual_c));
-//		GLfloat angulo_erro2 = acos(1.0);
-//		GLfloat protein_vetor = show_distance(0, prot_2_x, 0, prot_2_y, 0, prot_2_z);
-//		GLfloat protein_alfa = toAngle(acos(prot_2_x / protein_vetor));
-//
-//		GLfloat ghost_vetor = show_distance(0, ghost_2_x, 0, ghost_2_y, 0, ghost_2_z);
-//		GLfloat ghost_alfa = toAngle(acos(ghost_2_x / ghost_vetor));
-//		GLgloat ghost_vetor = show_distance(0, ghost_2_x, 0, ghost_2_y, 0, ghost_2_z);
-//		printf("PV: %f %f %f %f\n", proteina_angulo_x, protein_alfa, ghost_angulo_x, ghost_alfa);
-//		printf("Diferenca: %f %f %f %f %f %f\n", ghost_angulo_z, proteina_angulo_z, angulo_diferenca_z, prot_2_x, prot_2_y, angulo_erro);
-//		printf("Angulo %f %f %f\n", angulo_diferenca_z, angulo_diferenca_x, angulo_erro);
-//		printf("Erro de: %f\n");
-
-//		matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 0, 1, 0, proteina_angulo_x);
-//		ghost_2_x = outputMatrix[0][0];
-//		ghost_2_y = outputMatrix[1][0];
-//		ghost_2_z = outputMatrix[2][0];
-
-//		glColor4f(1.0, 1.0, 0.0, 1.0);
-//		glBegin(GL_LINES);
-//		glVertex3f(0.0, 0.0, 0.0);
-//		glVertex3f(prot_2_x, prot_2_y, prot_2_z);
-//		glEnd();
-//
-//		glColor4f(1.0, 1.0, 0.0, 1.0);
-////		glColor4f(0.0, 1.0, 0.0, 1.0);
-//		glTranslatef(ProteinOriginal[ghost_protein_atom[0]].x, ProteinOriginal[ghost_protein_atom[0]].y, ProteinOriginal[ghost_protein_atom[0]].z);
-//		glutWireSphere(0.5, 20, 20);
-//		glTranslatef(-ProteinOriginal[ghost_protein_atom[0]].x, -ProteinOriginal[ghost_protein_atom[0]].y, -ProteinOriginal[ghost_protein_atom[0]].z);
-////		glTranslatef(-ghost_2_x, -ghost_2_y, -ghost_2_z);
-//
-////		glTranslatef(0, 0, 0);
-//		glutWireSphere(0.4, 20, 20);
 		glColor4f(1.0, 1.0, 0.0, 1.0);
 		glBegin(GL_LINES);
 		glVertex3f(posx[ghost_protein_atom[0]], posy[ghost_protein_atom[0]], posz[ghost_protein_atom[0]]);
@@ -1928,209 +1856,125 @@ void drawScene() {
 		GLfloat diferenca_x = ProteinOriginal[ghost_protein_atom[0]].x;
 		GLfloat diferenca_y = ProteinOriginal[ghost_protein_atom[0]].y;
 		GLfloat diferenca_z = ProteinOriginal[ghost_protein_atom[0]].z;
-		printf("%f %f %f\n", percurso_x, percurso_y, percurso_z);
 
-		for (int i = 0; i < ProteinOriginal.size(); i++) {
-			if (ProteinOriginal[i].show) {
-//				if (i == 3 || i == 99) {
-//				if (i == 99) {
-//					ghost_2_x = ProteinOriginal[i].x;
-//					ghost_2_y = ProteinOriginal[i].y;
-//					ghost_2_z = ProteinOriginal[i].z;
-//					glColor4f(1.0, 0.0, 1.0, 1.0);
-//					glTranslatef(ghost_2_x, ghost_2_y, ghost_2_z);
-//					glutWireSphere(0.45, 20, 20);
-//					glTranslatef(-ghost_2_x, -ghost_2_y, -ghost_2_z);
+		ghost_2_x = ProteinOriginal[ghost_protein_atom[2]].x - diferenca_x;
+		ghost_2_y = ProteinOriginal[ghost_protein_atom[2]].y - diferenca_y;
+		ghost_2_z = ProteinOriginal[ghost_protein_atom[2]].z - diferenca_z;
+		if (ghost_2_x == 0)
+			ghost_2_x = 0.000001;
+		ghost_eixo_y = toAngle(atan(ghost_2_z / ghost_2_x));
+		matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 0, 1, 0, ghost_eixo_y);
+		// Rotacionar no eixo Z usando variavel diferenca_eixo_z
+		matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 0, 1, diferenca_eixo_z);
+		// Rotacionar de volta no eixo Y usando ghost_eixo_y + diferenca_eixo_y
+		matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 1, 0, -(ghost_eixo_y - diferenca_eixo_y));
+		ghost_2_x = outputMatrix[0][0];
+		ghost_2_y = outputMatrix[1][0];
+		ghost_2_z = outputMatrix[2][0];
+		ghost_2_x = ghost_2_x + diferenca_x + percurso_x;
+		ghost_2_y = ghost_2_y + diferenca_y + percurso_y;
+		ghost_2_z = ghost_2_z + diferenca_z + percurso_z;
+		glColor4f(1.0, 0.0, 0.0, 1.0);
+		glTranslatef(ghost_2_x, ghost_2_y, ghost_2_z);
+		glutWireSphere(0.5, 20, 20);
+		glTranslatef(-ghost_2_x, -ghost_2_y, -ghost_2_z);
 
-					ghost_2_x = ProteinOriginal[i].x - diferenca_x;
-					ghost_2_y = ProteinOriginal[i].y - diferenca_y;
-					ghost_2_z = ProteinOriginal[i].z - diferenca_z;
-//					ghost_eixo_y = 0;
-					if (ghost_2_x == 0)
-						ghost_2_x = 0.000001;
-					ghost_eixo_y = toAngle(atan(ghost_2_z / ghost_2_x));
 
-//					printf("%f %f %f\n", ghost_2_z, ghost_2_x, ghost_eixo_y);
-					matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 0, 1, 0, ghost_eixo_y);
-//					// Rotacionar no eixo Z usando variavel diferenca_eixo_z
-					matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 0, 1, diferenca_eixo_z);
-//					// Rotacionar de volta no eixo Y usando ghost_eixo_y + diferenca_eixo_y
-//					matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 1, 0, -(ghost_2_y - diferenca_eixo_y));
-					matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 1, 0, -(ghost_eixo_y - diferenca_eixo_y));
-					ghost_2_x = outputMatrix[0][0];
-					ghost_2_y = outputMatrix[1][0];
-					ghost_2_z = outputMatrix[2][0];
-//					printf("%f %f %f \n", ghost_eixo_y, diferenca_eixo_y, diferenca_eixo_z);
+		// Ver distancia de ghost 0 para zero
+		// travert ghost 2 para distancia equivalente de zero de ghost 1
+		// ver angulo Y de ghost 1
+		// rotacionar ghost 1 para 0
+		// ver angulo Z de ghost 1
+		// rotacionar angulo 1 para 0
+		// Ver angulo X e guardar em X_ghost
 
-					ghost_2_x = ghost_2_x + diferenca_x + percurso_x;
-					ghost_2_y = ghost_2_y + diferenca_y + percurso_y;
-					ghost_2_z = ghost_2_z + diferenca_z + percurso_z;
-					glColor4f(1.0, 0.0, 0.0, 1.0);
-					glTranslatef(ghost_2_x, ghost_2_y, ghost_2_z);
-					glutWireSphere(0.5, 20, 20);
-					glTranslatef(-ghost_2_x, -ghost_2_y, -ghost_2_z);
-//				}
-//				glColor4f(1.0, 0.0, 0.0, 1.0);
-//				glTranslatef(ProteinOriginal[i].x, ProteinOriginal[i].y, ProteinOriginal[i].z);
-//				glutWireSphere(0.5, 20, 20);
-//				glTranslatef(-ProteinOriginal[i].x, -ProteinOriginal[i].y, -ProteinOriginal[i].z);
+		//  ---- parte b -- mexendo com a proteina-------
+		// achar angulo Y de ghost 1 da proteina
+		// rotacionar angulo Y ghost 1 da proteina
+		// achar angulo Z de ghost 1 da proteina
+		// rotacionar angulo Z da proteina
+		// achar angulo X da protein
 
-				//				if (i == 3 || i == 99) {
-				//					matrix3d(ProteinOriginal[i].x - ProteinOriginal[3].x, ProteinOriginal[i].y - ProteinOriginal[3].y, ProteinOriginal[i].z - ProteinOriginal[3].z, 0, 0, 1, toAngle(difOF));
-				//					ox1 = (outputMatrix[0][0] + diferenca_x + ProteinOriginal[3].x);
-				//					oz1 = ProteinOriginal[ghost_protein_atom[0]].z;
-				//					ox2 = ProteinOriginal[ghost_protein_atom[2]].x;
-				//					oz2 = ProteinOriginal[ghost_protein_atom[2]].z;
-				//					oh = show_distance(ox1, ox2, oz1, oz2, 0, 0);
-				//					oax = abs(show_distance(ox1, ox2, 0, 0, 0, 0));
-				//					oaz = abs(show_distance(oz1, oz2, 0, 0, 0, 0));
-				//					oa1 = acos(oax / oh);
-				//
-				//					fx1 = posx[ghost_protein_atom[0]];
-				//					fz1 = posz[ghost_protein_atom[0]];
-				//					fx2 = posx[ghost_protein_atom[2]];
-				//					fz2 = posz[ghost_protein_atom[2]];
-				//					fh = show_distance(fx1, fx2, fz1, fz2, 0, 0);
-				//					fax = abs(show_distance(fx1, fx2, 0, 0, 0, 0));
-				//					faz = abs(show_distance(fz1, fz2, 0, 0, 0, 0));
-				//					fa1 = acos(fax / fh);
-				//					difOFz = fa1 - oa1;
-				//					glColor4f(1.0, 0.0, 0.0, 1.0);
-				//					glTranslatef((outputMatrix[0][0] + diferenca_x + ProteinOriginal[3].x), (outputMatrix[1][0] + diferenca_y + ProteinOriginal[3].y), (outputMatrix[2][0] + diferenca_z + ProteinOriginal[3].z));
-				//					glutWireSphere(0.5, 20, 20);
-				//					glTranslatef(-(outputMatrix[0][0] + diferenca_x + ProteinOriginal[3].x), -(outputMatrix[1][0] + diferenca_y + ProteinOriginal[3].y), -(outputMatrix[2][0] + diferenca_z + ProteinOriginal[3].z));
-				//				}
-				//			}
-			}
-		}
+		// achar diferenca entre angulo X do ghost e da proteina
 
-		// ------------------------------- Angulo X -----------------------------------
-//		GLfloat distancia = 0.0;
-//		GLfloat ultima_distancia = 100.0;
-//		GLfloat ghost_angulo_z = 0.0;
+        // ----- parte 2 -----------
+		// rotacionar Y da proteina para 0 e colocar valor em Y1
+		// rotacionar Z da proteina para 0 e colovar valor em Z1
+		// rotacionar X com diferenca
+		// rotacionar devolta Z1
+		// rotacionar devolta Y1
+
+
+
+// ---------------------------------------------------------------------
+// Funcionando pra dois atomos
+//		// Achar angulo Y de A e rotacionar A para que fique perpendicular com X (protein_eixo_y)
+//		GLfloat protein_eixo_y = toAngle(atan(prot_2t_z / prot_2t_x));
+//		matrix3d(prot_2t_x, prot_2t_y, prot_2t_z, 0, 1, 0, protein_eixo_y);
+//		prot_2t_x = outputMatrix[0][0];
+//		prot_2t_y = outputMatrix[1][0];
+//		prot_2t_z = outputMatrix[2][0];
 //
-//		for (GLint lo = 0; lo < 3; lo++) {
-//			distancia = 0.0;
-//			ultima_distancia = 100.0;
-//			ghost_angulo_z = 0.0;
-//			for (GLfloat di = 0.0; di < 360; di++) {
-//				matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 0, 0, 1, di);
-//				distancia = show_distance(prot_2_x, outputMatrix[0][0], prot_2_y, outputMatrix[1][0], prot_2_z, outputMatrix[2][0]);
-//				if (distancia < ultima_distancia) {
-//					ghost_angulo_z = di;
-//				}
-//				ultima_distancia = distancia;
-//			}
-//			matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 0, 0, 1, ghost_angulo_z);
-//			ghost_2_x = outputMatrix[0][0];
-//			ghost_2_y = outputMatrix[1][0];
-//			ghost_2_z = outputMatrix[2][0];
+//		// Achar angulo Y de B e rotacionar B para que fique perpendicular com X (ghost_eixo_y)
+//		GLfloat ghost_eixo_y = toAngle(atan(ghost_2t_z / ghost_2t_x));
+//		matrix3d(ghost_2t_x, ghost_2t_y, ghost_2t_z, 0, 1, 0, ghost_eixo_y);
+//		ghost_2t_x = outputMatrix[0][0];
+//		ghost_2t_y = outputMatrix[1][0];
+//		ghost_2t_z = outputMatrix[2][0];
 //
-//			// ------------------------------- Angulo Z -----------------------------------
-//			distancia = 0.0;
-//			ultima_distancia = 100.0;
-//			GLfloat ghost_angulo_x = 0.0;
-//			for (GLfloat di = 0.0; di < 360; di++) {
-//				matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 0, 1, 0, di);
-//				distancia = show_distance(prot_2_x, outputMatrix[0][0], prot_2_y, outputMatrix[1][0], prot_2_z, outputMatrix[2][0]);
-//				if (distancia < ultima_distancia) {
-//					ghost_angulo_x = di;
-//				}
-//				ultima_distancia = distancia;
-//			}
-//			matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 0, 1, 0, ghost_angulo_x);
-//			ghost_2_x = outputMatrix[0][0];
-//			ghost_2_y = outputMatrix[1][0];
-//			ghost_2_z = outputMatrix[2][0];
-//
-//			// ------------------------------- Angulo Z -----------------------------------
-//			distancia = 0.0;
-//			ultima_distancia = 100.0;
-//			GLfloat ghost_angulo_y = 0.0;
-//			for (GLfloat di = 0.0; di < 360; di++) {
-//				matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 1, 0, 0, di);
-//				distancia = show_distance(prot_2_x, outputMatrix[0][0], prot_2_y, outputMatrix[1][0], prot_2_z, outputMatrix[2][0]);
-//				if (distancia < ultima_distancia) {
-//					ghost_angulo_y = di;
-//				}
-//				ultima_distancia = distancia;
-//			}
-//			matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 1, 0, 0, ghost_angulo_y);
-//			ghost_2_x = outputMatrix[0][0];
-//			ghost_2_y = outputMatrix[1][0];
-//			ghost_2_z = outputMatrix[2][0];
+//		GLfloat diferenca_eixo_y = ghost_eixo_y - protein_eixo_y;
+//		// Encontrar angulo Z entre 0 e A, para isso utilizar X e Y
+//		GLfloat protein_eixo_z = toAngle(atan(prot_2t_x / prot_2t_y));
+//		if (prot_2t_y > 0) {
+//			protein_eixo_z += 180;
 //		}
+//		// Encontrar angulo Z entre 0 e B, para isso utilizar X e Y
+//		GLfloat ghost_eixo_z = toAngle(atan(ghost_2t_x / ghost_2t_y));
+//		// Achar diferenca de angulo Z entre A e B (diferenca_eixo_z)
+//		GLfloat diferenca_eixo_z = ghost_eixo_z - protein_eixo_z;
 //
-//		distancia = show_distance(prot_2_x, ghost_2_x, prot_2_y, ghost_2_y, prot_2_z, ghost_2_z);
-//		printf("Distancia final %f\n", distancia);
-//		glColor4f(0.0, 1.0, 0.0, 1.0);
-//		glTranslatef(ghost_2_x, ghost_2_y, ghost_2_z);
-//		glutWireSphere(0.5, 20, 20);
-//		glTranslatef(-ghost_2_x, -ghost_2_y, -ghost_2_z);
+//		glColor4f(1.0, 1.0, 0.0, 1.0);
+//		glBegin(GL_LINES);
+//		glVertex3f(posx[ghost_protein_atom[0]], posy[ghost_protein_atom[0]], posz[ghost_protein_atom[0]]);
+//		glVertex3f(posx[ghost_protein_atom[2]], posy[ghost_protein_atom[2]], posz[ghost_protein_atom[2]]);
+//		glEnd();
+//
+//		GLfloat percurso_x = posx[ghost_protein_atom[0]] - ProteinOriginal[ghost_protein_atom[0]].x;
+//		GLfloat percurso_y = posy[ghost_protein_atom[0]] - ProteinOriginal[ghost_protein_atom[0]].y;
+//		GLfloat percurso_z = posz[ghost_protein_atom[0]] - ProteinOriginal[ghost_protein_atom[0]].z;
+//		GLfloat diferenca_x = ProteinOriginal[ghost_protein_atom[0]].x;
+//		GLfloat diferenca_y = ProteinOriginal[ghost_protein_atom[0]].y;
+//		GLfloat diferenca_z = ProteinOriginal[ghost_protein_atom[0]].z;
 
-//		}
-		// Mover X ateh q distancia seje menor
-		// Mover Y ateh q distancia seje menor
-		// Mover Z ateh q distancia seje menor
-
-		// ---------------------------------------------
-		// Funcionando -------------------------------------------
-//		GLfloat diferenca_x = posx[ghost_protein_atom[0]] - ProteinOriginal[ghost_protein_atom[0]].x;
-//		GLfloat diferenca_y = posy[ghost_protein_atom[0]] - ProteinOriginal[ghost_protein_atom[0]].y;
-//		GLfloat diferenca_z = posz[ghost_protein_atom[0]] - ProteinOriginal[ghost_protein_atom[0]].z;
-//
-//		GLfloat ox1 = ProteinOriginal[ghost_protein_atom[0]].x;
-//		GLfloat oy1 = ProteinOriginal[ghost_protein_atom[0]].y;
-//		GLfloat ox2 = ProteinOriginal[ghost_protein_atom[2]].x;
-//		GLfloat oy2 = ProteinOriginal[ghost_protein_atom[2]].y;
-//		GLfloat oh = show_distance(ox1, ox2, oy1, oy2, 0, 0);
-//		GLfloat oax = abs(show_distance(ox1, ox2, 0, 0, 0, 0));
-//		GLfloat oay = abs(show_distance(oy1, oy2, 0, 0, 0, 0));
-//		GLfloat oa1 = acos(oax / oh);
-//
-//		GLfloat fx1 = posx[ghost_protein_atom[0]];
-//		GLfloat fy1 = posy[ghost_protein_atom[0]];
-//		GLfloat fx2 = posx[ghost_protein_atom[2]];
-//		GLfloat fy2 = posy[ghost_protein_atom[2]];
-//		GLfloat fh = show_distance(fx1, fx2, fy1, fy2, 0, 0);
-//		GLfloat fax = abs(show_distance(fx1, fx2, 0, 0, 0, 0));
-//		GLfloat fay = abs(show_distance(fy1, fy2, 0, 0, 0, 0));
-//		GLfloat fa1 = acos(fax / fh);
-//
-//		GLfloat difOF = fa1 - oa1;
-//
-//		GLfloat oz1, oz2, oaz, fz1, fz2, faz, difOFz;
-//
-//
+		// Funcinoando
 //		for (int i = 0; i < ProteinOriginal.size(); i++) {
 //			if (ProteinOriginal[i].show) {
-//				if (i == 3 || i == 99) {
-//					matrix3d(ProteinOriginal[i].x - ProteinOriginal[3].x, ProteinOriginal[i].y - ProteinOriginal[3].y, ProteinOriginal[i].z - ProteinOriginal[3].z, 0, 0, 1, toAngle(difOF));
-//					ox1 = (outputMatrix[0][0] + diferenca_x + ProteinOriginal[3].x);
-//					oz1 = ProteinOriginal[ghost_protein_atom[0]].z;
-//					ox2 = ProteinOriginal[ghost_protein_atom[2]].x;
-//					oz2 = ProteinOriginal[ghost_protein_atom[2]].z;
-//					oh = show_distance(ox1, ox2, oz1, oz2, 0, 0);
-//					oax = abs(show_distance(ox1, ox2, 0, 0, 0, 0));
-//					oaz = abs(show_distance(oz1, oz2, 0, 0, 0, 0));
-//					oa1 = acos(oax / oh);
-//
-//					fx1 = posx[ghost_protein_atom[0]];
-//					fz1 = posz[ghost_protein_atom[0]];
-//					fx2 = posx[ghost_protein_atom[2]];
-//					fz2 = posz[ghost_protein_atom[2]];
-//					fh = show_distance(fx1, fx2, fz1, fz2, 0, 0);
-//					fax = abs(show_distance(fx1, fx2, 0, 0, 0, 0));
-//					faz = abs(show_distance(fz1, fz2, 0, 0, 0, 0));
-//					fa1 = acos(fax / fh);
-//					difOFz = fa1 - oa1;
+//				if (i == ghost_protein_atom[0] || i == ghost_protein_atom[1] || i == ghost_protein_atom[2]) {
+//					ghost_2_x = ProteinOriginal[i].x - diferenca_x;
+//					ghost_2_y = ProteinOriginal[i].y - diferenca_y;
+//					ghost_2_z = ProteinOriginal[i].z - diferenca_z;
+//					if (ghost_2_x == 0)
+//						ghost_2_x = 0.000001;
+//					ghost_eixo_y = toAngle(atan(ghost_2_z / ghost_2_x));
+//					matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 0, 1, 0, ghost_eixo_y);
+////					// Rotacionar no eixo Z usando variavel diferenca_eixo_z
+//					matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 0, 1, diferenca_eixo_z);
+////					// Rotacionar de volta no eixo Y usando ghost_eixo_y + diferenca_eixo_y
+//					matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 1, 0, -(ghost_eixo_y - diferenca_eixo_y));
+//					ghost_2_x = outputMatrix[0][0];
+//					ghost_2_y = outputMatrix[1][0];
+//					ghost_2_z = outputMatrix[2][0];
+//					ghost_2_x = ghost_2_x + diferenca_x + percurso_x;
+//					ghost_2_y = ghost_2_y + diferenca_y + percurso_y;
+//					ghost_2_z = ghost_2_z + diferenca_z + percurso_z;
 //					glColor4f(1.0, 0.0, 0.0, 1.0);
-//					glTranslatef((outputMatrix[0][0] + diferenca_x + ProteinOriginal[3].x), (outputMatrix[1][0] + diferenca_y + ProteinOriginal[3].y), (outputMatrix[2][0] + diferenca_z + ProteinOriginal[3].z));
+//					glTranslatef(ghost_2_x, ghost_2_y, ghost_2_z);
 //					glutWireSphere(0.5, 20, 20);
-//					glTranslatef(-(outputMatrix[0][0] + diferenca_x + ProteinOriginal[3].x), -(outputMatrix[1][0] + diferenca_y + ProteinOriginal[3].y), -(outputMatrix[2][0] + diferenca_z + ProteinOriginal[3].z));
+//					glTranslatef(-ghost_2_x, -ghost_2_y, -ghost_2_z);
 //				}
 //			}
 //		}
+
 	}
 
 	if (cont_loop_electron == cont_loop_electron_time) {
