@@ -29,6 +29,7 @@
 								<option id="nvcc.compiler.pic.1132180986" name="Position Independent Code (-fPIC)" superClass="nvcc.compiler.pic"/>
 								<option id="nvcc.compiler.verbose.1314054802" name="Verbose (-v)" superClass="nvcc.compiler.verbose" value="true" valueType="boolean"/>
 								<option id="nvcc.compiler.optionsfile.134693174" name="Command line options file (-optf)" superClass="nvcc.compiler.optionsfile" value="" valueType="string"/>
+								<option id="nvcc.compiler.include.paths.937219334" name="Include paths (-I)" superClass="nvcc.compiler.include.paths" valueType="includePath"/>
 								<inputType id="nvcc.compiler.input.cu.644365525" superClass="nvcc.compiler.input.cu"/>
 								<inputType id="nvcc.compiler.input.cpp.960037404" superClass="nvcc.compiler.input.cpp"/>
 								<inputType id="nvcc.compiler.input.c.1801210374" superClass="nvcc.compiler.input.c"/>

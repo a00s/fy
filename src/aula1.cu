@@ -16,6 +16,15 @@
 #include "matrix3d.h"
 //#include <unordered_map>
 
+//Receita de bolo pro Eigen funciona
+//cd /usr/local/include
+//sudo ln -sf eigen3/Eigen Eigen
+//sudo ln -sf eigen3/unsupported unsupported
+#undef Success
+#include <Eigen/Dense>
+using Eigen::MatrixXd;
+//#include <Eigen/Affine3f>
+
 using namespace std;
 // Variaveis de tela
 map<string, GLfloat> vs;
@@ -222,6 +231,11 @@ GLint testesphera_contador = 0;
 GLint contador_sleep = 0;
 map<int, map<string, map<string, GLfloat> > > atom_statistic;
 vector<VectorProtein> ProteinOriginal;
+
+// ----------- Variaveis temporarias para teste ----------------
+GLfloat angulo_adicional_teste = 0.0;
+GLint sequencial_mostra = 6;
+GLint contador_super_local = 0;
 
 // --------- External functions -------------
 
@@ -506,7 +520,19 @@ void initGL() {
 
 	distance_calibration_pdb("1oeh");
 	load_protein("1oeh");
-//	load_protein_models("1oeh");
+//	MatrixXd m(2,2);
+//	  m(0,0) = 3;
+//	  m(1,0) = 2.5;
+//	  m(0,1) = -1;
+//	  m(1,1) = m(1,0) + m(0,1);
+//	  std::cout << m << std::endl;
+
+//	  Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+//	  transform.rotate (Eigen::AngleAxisf (M_PI /*180°*/, Eigen::Vector3f::UnitY ()));
+//	  printf("%f\n",transform);
+//	Affine3f transform = Eigen::Affine3f::Identity();
+
+	//	load_protein_models("1oeh");
 
 //	posx_backup = posx;
 	memcpy(posx_backup, posx, sizeof(posx));
@@ -1771,6 +1797,10 @@ void drawScene() {
 		GLfloat prot_0_y = 0;
 		GLfloat prot_0_z = 0;
 
+		GLfloat prot_1_x = posx[ghost_protein_atom[1]] - posx[ghost_protein_atom[0]];
+		GLfloat prot_1_y = posy[ghost_protein_atom[1]] - posy[ghost_protein_atom[0]];
+		GLfloat prot_1_z = posz[ghost_protein_atom[1]] - posz[ghost_protein_atom[0]];
+
 		GLfloat prot_2_x = posx[ghost_protein_atom[2]] - posx[ghost_protein_atom[0]];
 		GLfloat prot_2_y = posy[ghost_protein_atom[2]] - posy[ghost_protein_atom[0]];
 		GLfloat prot_2_z = posz[ghost_protein_atom[2]] - posz[ghost_protein_atom[0]];
@@ -1783,6 +1813,9 @@ void drawScene() {
 		ghost_x[0] = ProteinOriginal[ghost_protein_atom[0]].x;
 		ghost_y[0] = ProteinOriginal[ghost_protein_atom[0]].y;
 		ghost_z[0] = ProteinOriginal[ghost_protein_atom[0]].z;
+		ghost_x[1] = ProteinOriginal[ghost_protein_atom[1]].x;
+		ghost_y[1] = ProteinOriginal[ghost_protein_atom[1]].y;
+		ghost_z[1] = ProteinOriginal[ghost_protein_atom[1]].z;
 		ghost_x[2] = ProteinOriginal[ghost_protein_atom[2]].x;
 		ghost_y[2] = ProteinOriginal[ghost_protein_atom[2]].y;
 		ghost_z[2] = ProteinOriginal[ghost_protein_atom[2]].z;
@@ -1790,6 +1823,10 @@ void drawScene() {
 		GLfloat ghost_0_x = 0;
 		GLfloat ghost_0_y = 0;
 		GLfloat ghost_0_z = 0;
+
+		GLfloat ghost_1_x = ghost_x[1] - ghost_x[0];
+		GLfloat ghost_1_y = ghost_y[1] - ghost_y[0];
+		GLfloat ghost_1_z = ghost_z[1] - ghost_z[0];
 
 		GLfloat ghost_2_x = ghost_x[2] - ghost_x[0];
 		GLfloat ghost_2_y = ghost_y[2] - ghost_y[0];
@@ -1844,11 +1881,11 @@ void drawScene() {
 		// Achar diferenca de angulo Z entre A e B (diferenca_eixo_z)
 		GLfloat diferenca_eixo_z = ghost_eixo_z - protein_eixo_z;
 
-		glColor4f(1.0, 1.0, 0.0, 1.0);
-		glBegin(GL_LINES);
-		glVertex3f(posx[ghost_protein_atom[0]], posy[ghost_protein_atom[0]], posz[ghost_protein_atom[0]]);
-		glVertex3f(posx[ghost_protein_atom[2]], posy[ghost_protein_atom[2]], posz[ghost_protein_atom[2]]);
-		glEnd();
+//		glColor4f(1.0, 1.0, 0.0, 1.0);
+//		glBegin(GL_LINES);
+//		glVertex3f(posx[ghost_protein_atom[0]], posy[ghost_protein_atom[0]], posz[ghost_protein_atom[0]]);
+//		glVertex3f(posx[ghost_protein_atom[2]], posy[ghost_protein_atom[2]], posz[ghost_protein_atom[2]]);
+//		glEnd();
 
 		GLfloat percurso_x = posx[ghost_protein_atom[0]] - ProteinOriginal[ghost_protein_atom[0]].x;
 		GLfloat percurso_y = posy[ghost_protein_atom[0]] - ProteinOriginal[ghost_protein_atom[0]].y;
@@ -1857,9 +1894,48 @@ void drawScene() {
 		GLfloat diferenca_y = ProteinOriginal[ghost_protein_atom[0]].y;
 		GLfloat diferenca_z = ProteinOriginal[ghost_protein_atom[0]].z;
 
-		ghost_2_x = ProteinOriginal[ghost_protein_atom[2]].x - diferenca_x;
-		ghost_2_y = ProteinOriginal[ghost_protein_atom[2]].y - diferenca_y;
-		ghost_2_z = ProteinOriginal[ghost_protein_atom[2]].z - diferenca_z;
+		// --------------------- TENTANDO FAZER PARTE 2 ------------------------
+//		glColor4f(1.0, 1.0, 0.0, 1.0);
+//		glTranslatef(ghost_2t_x, ghost_2t_y, ghost_2t_z);
+//		glutWireSphere(0.5, 20, 20);
+//		glTranslatef(-ghost_2t_x, -ghost_2t_y, -ghost_2t_z);
+
+		// Rotacionar angulo Z de B para que fique perpendicular com A
+//		matrix3d(ghost_2t_x, ghost_2t_y, ghost_2t_z, 0, 0, 1, ghost_eixo_z);
+//		ghost_2t_x = outputMatrix[0][0];
+//		ghost_2t_y = outputMatrix[1][0];
+//		ghost_2t_z = outputMatrix[2][0];
+//
+//		glColor4f(1.0, 1.0, 0.0, 1.0);
+//		glTranslatef(ghost_2t_x, ghost_2t_y, ghost_2t_z);
+//		glutWireSphere(0.5, 20, 20);
+//		glTranslatef(-ghost_2t_x, -ghost_2t_y, -ghost_2t_z);
+
+		// ---------------------- vendo ghost original
+
+		// ---------------------- vendo atual
+
+		if (ghost_1_x == 0)
+			ghost_1_x = 0.000001;
+		ghost_eixo_y = toAngle(atan(ghost_1_z / ghost_1_x));
+		matrix3d(ghost_1_x, ghost_1_y, ghost_1_z, 0, 1, 0, ghost_eixo_y);
+		// Rotacionar no eixo Z usando variavel diferenca_eixo_z
+		matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 0, 1, diferenca_eixo_z);
+		// Rotacionar de volta no eixo Y usando ghost_eixo_y + diferenca_eixo_y
+		matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 1, 0, -(ghost_eixo_y - diferenca_eixo_y));
+		ghost_1_x = outputMatrix[0][0];
+		ghost_1_y = outputMatrix[1][0];
+		ghost_1_z = outputMatrix[2][0];
+//		glColor4f(1.0, 1.0, 1.0, 1.0);
+//		glutWireSphere(0.5, 20, 20);
+//		glTranslatef(ghost_1_x, ghost_1_y, ghost_1_z);
+//		glutWireSphere(0.5, 20, 20);
+//		glTranslatef(-ghost_1_x, -ghost_1_y, -ghost_1_z);
+//		glColor4f(1.0, 1.0, 0.0, 1.0);
+//		glTranslatef(ghost_2_x, ghost_2_y, ghost_2_z);
+//		glutWireSphere(0.2, 20, 20);
+//		glTranslatef(-ghost_2_x, -ghost_2_y, -ghost_2_z);
+
 		if (ghost_2_x == 0)
 			ghost_2_x = 0.000001;
 		ghost_eixo_y = toAngle(atan(ghost_2_z / ghost_2_x));
@@ -1871,109 +1947,194 @@ void drawScene() {
 		ghost_2_x = outputMatrix[0][0];
 		ghost_2_y = outputMatrix[1][0];
 		ghost_2_z = outputMatrix[2][0];
-		ghost_2_x = ghost_2_x + diferenca_x + percurso_x;
-		ghost_2_y = ghost_2_y + diferenca_y + percurso_y;
-		ghost_2_z = ghost_2_z + diferenca_z + percurso_z;
-		glColor4f(1.0, 0.0, 0.0, 1.0);
-		glTranslatef(ghost_2_x, ghost_2_y, ghost_2_z);
-		glutWireSphere(0.5, 20, 20);
-		glTranslatef(-ghost_2_x, -ghost_2_y, -ghost_2_z);
-
-
-		// Ver distancia de ghost 0 para zero
-		// travert ghost 2 para distancia equivalente de zero de ghost 1
-		// ver angulo Y de ghost 1
-		// rotacionar ghost 1 para 0
-		// ver angulo Z de ghost 1
-		// rotacionar angulo 1 para 0
-		// Ver angulo X e guardar em X_ghost
-
-		//  ---- parte b -- mexendo com a proteina-------
-		// achar angulo Y de ghost 1 da proteina
-		// rotacionar angulo Y ghost 1 da proteina
-		// achar angulo Z de ghost 1 da proteina
-		// rotacionar angulo Z da proteina
-		// achar angulo X da protein
-
-		// achar diferenca entre angulo X do ghost e da proteina
-
-        // ----- parte 2 -----------
-		// rotacionar Y da proteina para 0 e colocar valor em Y1
-		// rotacionar Z da proteina para 0 e colovar valor em Z1
-		// rotacionar X com diferenca
-		// rotacionar devolta Z1
-		// rotacionar devolta Y1
-
-
-
-// ---------------------------------------------------------------------
-// Funcionando pra dois atomos
-//		// Achar angulo Y de A e rotacionar A para que fique perpendicular com X (protein_eixo_y)
-//		GLfloat protein_eixo_y = toAngle(atan(prot_2t_z / prot_2t_x));
-//		matrix3d(prot_2t_x, prot_2t_y, prot_2t_z, 0, 1, 0, protein_eixo_y);
-//		prot_2t_x = outputMatrix[0][0];
-//		prot_2t_y = outputMatrix[1][0];
-//		prot_2t_z = outputMatrix[2][0];
-//
-//		// Achar angulo Y de B e rotacionar B para que fique perpendicular com X (ghost_eixo_y)
-//		GLfloat ghost_eixo_y = toAngle(atan(ghost_2t_z / ghost_2t_x));
-//		matrix3d(ghost_2t_x, ghost_2t_y, ghost_2t_z, 0, 1, 0, ghost_eixo_y);
-//		ghost_2t_x = outputMatrix[0][0];
-//		ghost_2t_y = outputMatrix[1][0];
-//		ghost_2t_z = outputMatrix[2][0];
-//
-//		GLfloat diferenca_eixo_y = ghost_eixo_y - protein_eixo_y;
-//		// Encontrar angulo Z entre 0 e A, para isso utilizar X e Y
-//		GLfloat protein_eixo_z = toAngle(atan(prot_2t_x / prot_2t_y));
-//		if (prot_2t_y > 0) {
-//			protein_eixo_z += 180;
-//		}
-//		// Encontrar angulo Z entre 0 e B, para isso utilizar X e Y
-//		GLfloat ghost_eixo_z = toAngle(atan(ghost_2t_x / ghost_2t_y));
-//		// Achar diferenca de angulo Z entre A e B (diferenca_eixo_z)
-//		GLfloat diferenca_eixo_z = ghost_eixo_z - protein_eixo_z;
-//
 //		glColor4f(1.0, 1.0, 0.0, 1.0);
-//		glBegin(GL_LINES);
-//		glVertex3f(posx[ghost_protein_atom[0]], posy[ghost_protein_atom[0]], posz[ghost_protein_atom[0]]);
-//		glVertex3f(posx[ghost_protein_atom[2]], posy[ghost_protein_atom[2]], posz[ghost_protein_atom[2]]);
-//		glEnd();
-//
-//		GLfloat percurso_x = posx[ghost_protein_atom[0]] - ProteinOriginal[ghost_protein_atom[0]].x;
-//		GLfloat percurso_y = posy[ghost_protein_atom[0]] - ProteinOriginal[ghost_protein_atom[0]].y;
-//		GLfloat percurso_z = posz[ghost_protein_atom[0]] - ProteinOriginal[ghost_protein_atom[0]].z;
-//		GLfloat diferenca_x = ProteinOriginal[ghost_protein_atom[0]].x;
-//		GLfloat diferenca_y = ProteinOriginal[ghost_protein_atom[0]].y;
-//		GLfloat diferenca_z = ProteinOriginal[ghost_protein_atom[0]].z;
+//		glTranslatef(ghost_2_x, ghost_2_y, ghost_2_z);
+//		glutWireSphere(0.2, 20, 20);
+//		glTranslatef(-ghost_2_x, -ghost_2_y, -ghost_2_z);
+// ----------------------------- Observanco o ghost -----------------------------------------
+		ghost_2t_x = ghost_2_x;
+		ghost_2t_y = ghost_2_y;
+		ghost_2t_z = ghost_2_z;
+		GLfloat ghost_eixo_y_C = toAngle(atan(ghost_2t_z / ghost_2t_x));
+		matrix3d(ghost_2t_x, ghost_2t_y, ghost_2t_z, 0, 1, 0, ghost_eixo_y_C);
+		ghost_2t_x = outputMatrix[0][0];
+		ghost_2t_y = outputMatrix[1][0];
+		ghost_2t_z = outputMatrix[2][0];
 
+//		glColor4f(1.0, 1.0, 0.0, 1.0);
+//		glTranslatef(ghost_2t_x, ghost_2t_y, ghost_2t_z);
+//		glutWireSphere(0.2, 20, 20);
+//		glTranslatef(-ghost_2t_x, -ghost_2t_y, -ghost_2t_z);
+
+		GLfloat ghost_eixo_z_C = toAngle(atan(ghost_2t_x / ghost_2t_y));
+//		printf("%f\n", ghost_eixo_z_C);
+		matrix3d(ghost_2t_x, ghost_2t_y, ghost_2t_z, 0, 0, 1, ghost_eixo_z_C);
+		ghost_2t_x = outputMatrix[0][0];
+		ghost_2t_y = outputMatrix[1][0];
+		ghost_2t_z = outputMatrix[2][0];
+
+//		glColor4f(1.0, 1.0, 0.0, 1.0);
+//		glTranslatef(ghost_2t_x, ghost_2t_y, ghost_2t_z);
+//		glutWireSphere(0.2, 20, 20);
+//		glTranslatef(-ghost_2t_x, -ghost_2t_y, -ghost_2t_z);
+
+//		glColor4f(1.0, 0.5, 0.5, 1.0);
+//		glTranslatef(ghost_2t_x, ghost_2t_y, ghost_2t_z);
+//		glutWireSphere(0.5, 20, 20);
+//		glTranslatef(-ghost_2t_x, -ghost_2t_y, -ghost_2t_z);
+
+		// agora arrumando o 1
+
+		matrix3d(ghost_1_x, ghost_1_y, ghost_1_z, 0, 1, 0, ghost_eixo_y_C);
+		ghost_1_x = outputMatrix[0][0];
+		ghost_1_y = outputMatrix[1][0];
+		ghost_1_z = outputMatrix[2][0];
+
+		matrix3d(ghost_1_x, ghost_1_y, ghost_1_z, 0, 0, 1, ghost_eixo_z_C);
+		ghost_1_x = outputMatrix[0][0];
+		ghost_1_y = outputMatrix[1][0];
+		ghost_1_z = outputMatrix[2][0];
+
+		GLfloat ghost_eixo_y_C1 = toAngle(atan(ghost_1_z / ghost_1_x)); // Angulo Y do ghost encontrado quando alinhado A e C no mesmo eixo Y
+//		printf("%f\n", ghost_eixo_y_C1);
+
+		// Observando angulo da proteina original agora ----------------------------------------------
+		prot_2t_x = prot_2_x;
+		prot_2t_y = prot_2_y;
+		prot_2t_z = prot_2_z;
+		GLfloat prot_eixo_y_C = toAngle(atan(prot_2t_z / prot_2t_x));
+		matrix3d(prot_2t_x, prot_2t_y, prot_2t_z, 0, 1, 0, prot_eixo_y_C);
+		prot_2t_x = outputMatrix[0][0];
+		prot_2t_y = outputMatrix[1][0];
+		prot_2t_z = outputMatrix[2][0];
+		GLfloat prot_eixo_z_C = toAngle(atan(prot_2t_x / prot_2t_y));
+//				printf("%f\n", ghost_eixo_z_C);
+		matrix3d(prot_2t_x, prot_2t_y, prot_2t_z, 0, 0, 1, prot_eixo_z_C);
+		prot_2t_x = outputMatrix[0][0];
+		prot_2t_y = outputMatrix[1][0];
+		prot_2t_z = outputMatrix[2][0];
+
+		// agora arrumando o 1
+
+		matrix3d(prot_1_x, prot_1_y, prot_1_z, 0, 1, 0, prot_eixo_y_C);
+		prot_1_x = outputMatrix[0][0];
+		prot_1_y = outputMatrix[1][0];
+		prot_1_z = outputMatrix[2][0];
+
+		matrix3d(prot_1_x, prot_1_y, prot_1_z, 0, 0, 1, prot_eixo_z_C);
+		prot_1_x = outputMatrix[0][0];
+		prot_1_y = outputMatrix[1][0];
+		prot_1_z = outputMatrix[2][0];
+
+		GLfloat prot_eixo_y_C1 = toAngle(atan(prot_1_z / prot_1_x)); // Angulo Y do ghost encontrado quando alinhado A e C no mesmo eixo Y
+		GLfloat diferenca_eixo_y_1 = ghost_eixo_y_C1 - prot_eixo_y_C1;
+//		printf("%f \n", diferenca_eixo_y_1);
+
+//
+		glColor4f(1.0, 1.0, 0.0, 1.0);
+		glBegin(GL_LINES);
+		glVertex3f(posx[ghost_protein_atom[0]], posy[ghost_protein_atom[0]], posz[ghost_protein_atom[0]]);
+		glVertex3f(posx[ghost_protein_atom[2]], posy[ghost_protein_atom[2]], posz[ghost_protein_atom[2]]);
+		glEnd();
+
+//		GLfloat ultimo_2_x = 0.0;
+//		GLfloat ultimo_2_y = 0.0;
+//		GLfloat ultimo_2_z = 0.0;
+
+		// -------------------------------------------
+		ghost_2_x = ProteinOriginal[ghost_protein_atom[2]].x - diferenca_x;
+		ghost_2_y = ProteinOriginal[ghost_protein_atom[2]].y - diferenca_y;
+		ghost_2_z = ProteinOriginal[ghost_protein_atom[2]].z - diferenca_z;
+		GLfloat eixo_inicial_y = toAngle(atan(ghost_2_z / ghost_2_x));
+
+		// Catando eixo secundario ---------------------------------------------------------
+		glColor4f(1.0, 1.0, 0.0, 1.0);
+		glTranslatef(0.0, 0.0, 0.0);
+		glutWireSphere(0.4, 20, 20);
+//		glTranslatef(-ghost_2t_x, -ghost_2t_y, -ghost_2t_z);
+
+		matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 0, 1, 0, eixo_inicial_y);
+		GLfloat eixo_inicial_z = toAngle(atan(outputMatrix[0][0] / outputMatrix[1][0])) + 90.0;
+		// Eixo Z proteina original
+		matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 0, 1, eixo_inicial_z);
+		glColor4f(1.0, 1.0, 0.0, 1.0);
+		glTranslatef(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0]);
+		glutWireSphere(0.4, 20, 20);
+		glTranslatef(-outputMatrix[0][0], -outputMatrix[1][0], -outputMatrix[2][0]);
+//		printf("%f\n", eixo_inicial_z);
+
+		// Continuar daqui ------- preciso encontrar o angulo de diferenca de X
+		GLfloat eixo_inicial_real_y = toAngle(atan(prot_1_z / prot_1_x));
+		matrix3d(prot_1_x, prot_1_y, prot_1_z, 0, 1, 0, eixo_inicial_real_y);
+//		GLfloat eixo_inicial_real_z = toAngle(atan(outputMatrix[0][0] / outputMatrix[1][0])) + 90.0;
+		matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 0, 1, eixo_inicial_z);
+		glColor4f(1.0, 1.0, 0.0, 1.0);
+		glTranslatef(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0]);
+		glutWireSphere(0.4, 20, 20);
+		glTranslatef(-outputMatrix[0][0], -outputMatrix[1][0], -outputMatrix[2][0]);
+		printf("%f \n", eixo_inicial_real_y);
+
+//
+		// -------------------------------------------
+
+		contador_super_local++;
 		// Funcinoando
-//		for (int i = 0; i < ProteinOriginal.size(); i++) {
-//			if (ProteinOriginal[i].show) {
-//				if (i == ghost_protein_atom[0] || i == ghost_protein_atom[1] || i == ghost_protein_atom[2]) {
-//					ghost_2_x = ProteinOriginal[i].x - diferenca_x;
-//					ghost_2_y = ProteinOriginal[i].y - diferenca_y;
-//					ghost_2_z = ProteinOriginal[i].z - diferenca_z;
-//					if (ghost_2_x == 0)
-//						ghost_2_x = 0.000001;
+		for (int i = 0; i < ProteinOriginal.size(); i++) {
+			if (ProteinOriginal[i].show) {
+				if (i == ghost_protein_atom[0] || i == ghost_protein_atom[1] || i == ghost_protein_atom[2]) {
+					ghost_2_x = ProteinOriginal[i].x - diferenca_x;
+					ghost_2_y = ProteinOriginal[i].y - diferenca_y;
+					ghost_2_z = ProteinOriginal[i].z - diferenca_z;
+					if (ghost_2_x == 0)
+						ghost_2_x = 0.000001;
+
 //					ghost_eixo_y = toAngle(atan(ghost_2_z / ghost_2_x));
-//					matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 0, 1, 0, ghost_eixo_y);
-////					// Rotacionar no eixo Z usando variavel diferenca_eixo_z
-//					matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 0, 1, diferenca_eixo_z);
-////					// Rotacionar de volta no eixo Y usando ghost_eixo_y + diferenca_eixo_y
-//					matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 1, 0, -(ghost_eixo_y - diferenca_eixo_y));
+					matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 0, 1, 0, eixo_inicial_y);
+					ghost_2_x = outputMatrix[0][0];
+					ghost_2_y = outputMatrix[1][0];
+					ghost_2_z = outputMatrix[2][0];
+//
+					// Rotacionar no eixo Z usando variavel diferenca_eixo_z
+					matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 0, 1, diferenca_eixo_z + ghost_eixo_z_C + 90.0);
+					ghost_2_x = outputMatrix[0][0];
+					ghost_2_y = outputMatrix[1][0];
+					ghost_2_z = outputMatrix[2][0];
+
+					// Rotacionar no eixo Z usando variavel diferenca_eixo_z
+//					matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 0, 0, 1, ghost_eixo_z_C + 90.0);
 //					ghost_2_x = outputMatrix[0][0];
 //					ghost_2_y = outputMatrix[1][0];
 //					ghost_2_z = outputMatrix[2][0];
-//					ghost_2_x = ghost_2_x + diferenca_x + percurso_x;
-//					ghost_2_y = ghost_2_y + diferenca_y + percurso_y;
-//					ghost_2_z = ghost_2_z + diferenca_z + percurso_z;
-//					glColor4f(1.0, 0.0, 0.0, 1.0);
-//					glTranslatef(ghost_2_x, ghost_2_y, ghost_2_z);
-//					glutWireSphere(0.5, 20, 20);
-//					glTranslatef(-ghost_2_x, -ghost_2_y, -ghost_2_z);
-//				}
-//			}
-//		}
+
+					// Rotacionar de volta no eixo Y usando ghost_eixo_y + diferenca_eixo_y
+					matrix3d(outputMatrix[0][0], outputMatrix[1][0], outputMatrix[2][0], 1, 0, 0, angulo_adicional_teste);
+					ghost_2_x = outputMatrix[0][0];
+					ghost_2_y = outputMatrix[1][0];
+					ghost_2_z = outputMatrix[2][0];
+
+					// Rotacionar no eixo Z usando variavel diferenca_eixo_z
+					matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 0, 0, 1, -(ghost_eixo_z_C + 90.0));
+					ghost_2_x = outputMatrix[0][0];
+					ghost_2_y = outputMatrix[1][0];
+					ghost_2_z = outputMatrix[2][0];
+
+					// Rotacionar devolta o eyxo Y incluindo a diferenca de angulo
+					matrix3d(ghost_2_x, ghost_2_y, ghost_2_z, 0, 1, 0, -eixo_inicial_y + diferenca_eixo_y);
+					ghost_2_x = outputMatrix[0][0];
+					ghost_2_y = outputMatrix[1][0];
+					ghost_2_z = outputMatrix[2][0];
+
+					// --------------------------------------------------------------------------------------------
+					ghost_2_x = ghost_2_x + diferenca_x + percurso_x;
+					ghost_2_y = ghost_2_y + diferenca_y + percurso_y;
+					ghost_2_z = ghost_2_z + diferenca_z + percurso_z;
+					glColor4f(1.0, 0.0, 0.0, 1.0);
+					glTranslatef(ghost_2_x, ghost_2_y, ghost_2_z);
+					glutWireSphere(0.5, 6, 6);
+					glTranslatef(-ghost_2_x, -ghost_2_y, -ghost_2_z);
+				}
+			}
+		}
 
 	}
 

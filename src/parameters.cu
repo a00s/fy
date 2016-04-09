@@ -281,22 +281,30 @@ void handleKeypress(int theKey, int theAction) {
 				ativa_desativa_ghost_protein();
 				break;
 			case 'I':
-				posx[99] -= 0.1;
+				angulo_adicional_teste -= 4.0;
+//				posx[36] -= 0.1;
 				break;
 			case 'O':
-				posx[99] += 0.1;
+				angulo_adicional_teste += 4.0;
+//				posx[36] += 0.1;
 				break;
 			case '9':
-				posy[99] += 0.1;
+				posy[36] += 0.1;
 				break;
 			case 'K':
-				posy[99] -= 0.1;
+				posy[36] -= 0.1;
 				break;
 			case 'L':
-				posz[99] -= 0.1;
+				posz[36] -= 0.1;
 				break;
 			case ';':
-				posz[99] += 0.1;
+				posz[36] += 0.1;
+				break;
+			case '[':
+				sequencial_mostra--;
+				break;
+			case ']':
+				sequencial_mostra++;
 				break;
 			}
 		} else {

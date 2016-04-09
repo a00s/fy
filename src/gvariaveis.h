@@ -55,3 +55,6 @@ extern void continua();
 extern void ativa_desativa_base();
 extern void ativa_desativa_base_line();
 extern void ativa_desativa_ghost_protein();
+
+extern GLfloat angulo_adicional_teste;
+extern GLint sequencial_mostra;
