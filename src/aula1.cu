@@ -42,7 +42,7 @@ GLint midWindowX = windowWidth / 2;         // Middle of the window horizontally
 GLint midWindowY = windowHeight / 2;         // Middle of the window vertically
 
 GLfloat fieldOfView = 15.0f; // Define our field of view (i.e. how quickly foreshortening occurs)
-GLfloat near = 1.0f; // The near (Z Axis) point of our viewing frustrum (default 1.0f)
+GLfloat near = 1.0f; // The near (Z Axis) point of our viewing frustrum (default 1.0f).
 GLfloat far = 1500.0f; // The far  (Z Axis) point of our viewing frustrum (default 1500.0f)
 
 GLint frameCount = 0; // How many frames have we drawn?
