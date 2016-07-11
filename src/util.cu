@@ -16,13 +16,17 @@
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
+#include "gvariaveis.h"
+#include "struct.h"
 using namespace std;
 
+extern vector<VectorProtein> ProteinOriginal;
 extern GLint calibration_precision;
 extern GLint calibration_precision_out;
 extern GLfloat calibrationMin[20][34][2][20][34]; // [Amino1][Atom1][Same|Another][Amino2][Atom2]
 extern GLfloat calibrationMax[20][34][2][20][34]; // [Amino1][Atom1][Same|Another][Amino2][Atom2]
 extern map<string, map<string, map<string, map<string, map<string, map<string, GLfloat> > > > > > vs;
+extern int atomos_quantidade;
 
 int get_amino_number(const char *amino_sigla) {
 	//  Glu = 0
@@ -390,15 +394,13 @@ void hsvtorgb(unsigned char *r, unsigned char *g, unsigned char *b, unsigned cha
 	return;
 }
 
-// para poder calcular os angulos eh necessario o valor absoluto da distancia entre dois pontos cartezianos
-//float distacia_cartesiana(float valor1, float valor2){
-//	float valor_final = 0;
-//	if((valor1 < 0 && valor2 > 0) || (valor1 > 0 && valor2 < 0)){
-//		printf("Lados difernetes\n");
-//		valor_final = valor1 + valor2;
-//		if(valor_final < 0){
-//			valor_final *= -1;
-//		}
-//	}
-//}
-//}
+GLfloat CompareWithGhost() {
+	GLfloat distance_error = 0;
+	for (GLint i = 0; i < atomos_quantidade; i++) {
+		if (ProteinOriginal[i].show) {
+			distance_error += show_distance(posx[i], posxGhost[i], posy[i], posyGhost[i], posz[i], poszGhost[i]);
+		}
+	}
+//	printf("Distance Error: %f\n",distance_error);
+	return distance_error;
+}

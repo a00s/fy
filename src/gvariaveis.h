@@ -1,7 +1,9 @@
 extern GLint windowWidth;
 extern GLint windowHeight;
-
 extern GLint calibration_precision;
+
+extern int atomos_quantidade;
+
 extern bool holdingForward;
 extern bool holdingBackward;
 extern bool holdingLeftStrafe;
@@ -28,12 +30,18 @@ extern bool show_tensao_hb;
 extern bool show_comparation;
 extern bool show_comparation_speed;
 
+
 extern GLfloat posx[1000];
 extern GLfloat posy[1000];
 extern GLfloat posz[1000];
+extern GLfloat posxGhost[1000];
+extern GLfloat posyGhost[1000];
+extern GLfloat poszGhost[1000];
+
 extern GLfloat caixa_tamanho;
 extern GLint ghost_angulo;
 
+extern GLfloat show_distance(GLfloat x1, GLfloat x2, GLfloat y1, GLfloat y2, GLfloat z1, GLfloat z2);
 extern void add_atom(char atomo_ll);
 extern void camera_position(GLfloat px, GLfloat py, GLfloat pz, GLfloat rx, GLfloat ry, GLfloat rz);
 extern void compare_protein_build_MD(int c_distancia);

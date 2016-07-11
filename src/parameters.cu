@@ -281,12 +281,12 @@ void handleKeypress(int theKey, int theAction) {
 				ativa_desativa_ghost_protein();
 				break;
 			case 'I':
-//				angulo_adicional_teste -= 4.0;
-				posx[36] -= 0.1;
+				angulo_adicional_teste -= 1.0;
+//				posx[36] -= 0.1;
 				break;
 			case 'O':
-//				angulo_adicional_teste += 4.0;
-				posx[36] += 0.1;
+				angulo_adicional_teste += 1.0;
+//				posx[36] += 0.1;
 				break;
 			case '9':
 				posy[36] += 0.1;

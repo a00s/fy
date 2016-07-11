@@ -68,6 +68,8 @@ src/aula1.o : ../src/aula1.cu \
     /usr/include/assert.h \
     /usr/local/cuda-7.5/bin/../targets/x86_64-linux/include/math_functions.h \
     /usr/include/math.h \
+    /usr/include/x86_64-linux-gnu/bits/math-vector.h \
+    /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
     /usr/include/x86_64-linux-gnu/bits/huge_val.h \
     /usr/include/x86_64-linux-gnu/bits/huge_valf.h \
     /usr/include/x86_64-linux-gnu/bits/huge_vall.h \
